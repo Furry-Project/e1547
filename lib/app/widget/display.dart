@@ -18,7 +18,7 @@ class SecureDisplay extends StatelessWidget {
       listener: (value) {
         if (!PlatformCapabilities.hasSecureDisplay) return;
         if (value) {
-          SecureAppSwitcher.on();
+          SecureAppSwitcher.on(iosStyle: SecureMaskStyle.blurDark);
         } else {
           SecureAppSwitcher.off();
         }

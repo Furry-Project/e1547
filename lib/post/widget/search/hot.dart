@@ -15,9 +15,10 @@ class HotPage extends StatelessWidget {
               PostsControllerHistoryConnector(
                 controller: controller,
                 child: PostsPage(
-                  appBar: const DefaultAppBar(
-                    title: Text('Hot'),
-                    actions: [ContextDrawerButton()],
+                  appBar: DefaultAppBar(
+                    leading: Theme.of(context).platform == TargetPlatform.iOS ? PostsPageSearchIconButton(controller: controller) : null,
+                    title: const Text('Hot'),
+                    actions: const [ContextDrawerButton()],
                   ),
                   controller: controller,
                 ),

@@ -8,15 +8,17 @@ class PostsPage extends StatefulWidget {
   const PostsPage({
     super.key,
     required this.controller,
-    required this.appBar,
+    this.appBar,
     this.displayType,
     this.drawerActions,
+    this.headerSliver,
     this.canSelect = true,
   });
 
   final PostController controller;
-  final PreferredSizeWidget appBar;
+  final PreferredSizeWidget? appBar;
   final List<Widget>? drawerActions;
+  final Widget? headerSliver;
   final PostDisplayType? displayType;
   final bool canSelect;
 
@@ -28,6 +30,9 @@ class _PostsPageState extends State<PostsPage> {
   @override
   Widget build(BuildContext context) {
     Widget? floatingActionButton() {
+      if (Theme.of(context).platform == TargetPlatform.iOS) {
+        return null;
+      }
       if (widget.controller.canSearch) {
         return PostsPageFloatingActionButton(controller: widget.controller);
       } else {
@@ -60,7 +65,7 @@ class _PostsPageState extends State<PostsPage> {
           child: AdaptiveScaffold(
             appBar: PostSelectionAppBar(
               controller: widget.controller,
-              child: widget.appBar,
+              child: widget.appBar!,
             ),
             drawer: const RouterDrawer(),
             endDrawer: endDrawer(),

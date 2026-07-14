@@ -40,6 +40,48 @@ class SearchPromptFloatingActionButton extends StatelessWidget {
   }
 }
 
+class SearchPromptIconButton extends StatelessWidget {
+  const SearchPromptIconButton({
+    super.key,
+    required this.tags,
+    this.onChanged,
+    this.onSubmit,
+    required this.filters,
+  });
+
+  final QueryMap tags;
+  final ValueSetter<QueryMap>? onChanged;
+  final ValueSetter<QueryMap>? onSubmit;
+  final List<FilterConfig> filters;
+
+  @override
+  Widget build(BuildContext context) {
+    bool isDesktop = Theme.of(context).isDesktop;
+    return SubValue<PromptActionController>(
+      create: () => PromptActionController(),
+      builder: (context, actionController) => IconButton(
+        icon: const Icon(Icons.search),
+        tooltip: 'Search',
+        onPressed: actionController.isLoading
+            ? null
+            : () => actionController.showOrAction(
+                  context,
+                  Material(
+                    child: PromptFilterList(
+                      tags: tags,
+                      onChanged: onChanged,
+                      onSubmit: onSubmit,
+                      submitIcon: isDesktop ? const Icon(Icons.search) : null,
+                      filters: filters,
+                      controller: actionController,
+                    ),
+                  ),
+                ),
+      ),
+    );
+  }
+}
+
 class PromptFilterList extends StatefulWidget {
   const PromptFilterList({
     super.key,

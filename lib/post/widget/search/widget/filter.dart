@@ -13,7 +13,29 @@ class PostsPageFloatingActionButton extends StatelessWidget {
     return SearchPromptFloatingActionButton(
       tags: controller.query,
       onSubmit: (value) => controller.query = value,
-      filters: [
+      filters: getPostsPageFilters(),
+    );
+  }
+}
+
+class PostsPageSearchIconButton extends StatelessWidget {
+  const PostsPageSearchIconButton({super.key, required this.controller});
+
+  final PostController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!controller.canSearch) return const SizedBox();
+    return SearchPromptIconButton(
+      tags: controller.query,
+      onSubmit: (value) => controller.query = value,
+      filters: getPostsPageFilters(),
+    );
+  }
+}
+
+List<FilterConfig> getPostsPageFilters() {
+  return [
         PrimaryFilterConfig(
           filter: TagSearchFilterTag(tag: 'tags', name: 'Tags'),
           filters: [
@@ -119,7 +141,5 @@ class PostsPageFloatingActionButton extends StatelessWidget {
             ),
           ],
         ),
-      ],
-    );
-  }
+      ];
 }

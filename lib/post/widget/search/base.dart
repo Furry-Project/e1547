@@ -25,7 +25,8 @@ class PostsSearchPage extends StatefulWidget {
   State<PostsSearchPage> createState() => _PostsSearchPageState();
 }
 
-class _PostsSearchPageState extends State<PostsSearchPage> {
+class _PostsSearchPageState extends State<PostsSearchPage>
+    with RouterDrawerEntryWidget<PostsSearchPage> {
   late bool readerMode = widget.readerMode;
   bool loadingInfo = true;
   Pool? pool;
@@ -132,6 +133,10 @@ class _PostsSearchPageState extends State<PostsSearchPage> {
               controller: controller,
               displayType: readerMode ? PostDisplayType.comic : null,
               appBar: DefaultAppBar(
+                leading: Theme.of(context).platform == TargetPlatform.iOS
+                    ? PostsPageSearchIconButton(controller: controller)
+                    : null,
+
                 title: Text(getTitle()),
                 actions: [
                   CrossFade(

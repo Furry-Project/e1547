@@ -43,57 +43,83 @@ class App extends StatelessWidget {
                   const SystemUiOverlayStyle(),
               child: SubValue<GlobalKey<NavigatorState>>(
                 create: () => GlobalKey<NavigatorState>(),
-                builder: (context, navigatorKey) => MaterialApp(
-                  title: AppInfo.instance.appName,
-                  theme: value.data,
-                  scrollBehavior: AndroidStretchScrollBehaviour(),
-                  localizationsDelegates: const [
-                    GlobalWidgetsLocalizations.delegate,
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalCupertinoLocalizations.delegate,
-                    RelativeTimeLocalizations.delegate,
-                  ],
+                builder: (context, navigatorKey) => _AppWidget(
+                  theme: value,
                   navigatorKey: navigatorKey,
-                  navigatorObservers: [
-                    context.watch<AnyRouteObserver>(),
-                    RouteLoggerObserver(),
-                    MaterialApp.createMaterialHeroController(),
+                  context: context,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppWidget extends StatefulWidget {
+  const _AppWidget({
+    required this.theme,
+    required this.navigatorKey,
+    required this.context,
+  });
+
+  final BuildContext context;
+  final AppTheme theme;
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  @override
+  State<_AppWidget> createState() => _AppWidgetState();
+}
+
+class _AppWidgetState extends State<_AppWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: AppInfo.instance.appName,
+      theme: widget.theme.data,
+      scrollBehavior: AndroidStretchScrollBehaviour(),
+      localizationsDelegates: const [
+        GlobalWidgetsLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        RelativeTimeLocalizations.delegate,
+      ],
+      navigatorKey: widget.navigatorKey,
+      navigatorObservers: [
+        context.watch<AnyRouteObserver>(),
+        RouteLoggerObserver(),
+        MaterialApp.createMaterialHeroController(),
+      ],
+      routes: context.watch<RouterDrawerController>().routes,
+      builder: (context, child) => WindowFrame(
+        child: WindowShortcuts(
+          navigatorKey: widget.navigatorKey,
+          child: SecureDisplay(
+            child: LockScreen(
+              child: LoadingShell(
+                child: MultiProvider(
+                  providers: [
+                    IdentityClientProvider(),
+                    TraitsClientProvider(),
+                    ClientProvider(),
+                    CacheManagerProvider(),
+                    TasksControllerProvider(),
                   ],
-                  routes: context.watch<RouterDrawerController>().routes,
-                  builder: (context, child) => WindowFrame(
-                    child: WindowShortcuts(
-                      navigatorKey: navigatorKey,
-                      child: SecureDisplay(
-                        child: LockScreen(
-                          child: LoadingShell(
-                            child: MultiProvider(
-                              providers: [
-                                IdentityClientProvider(),
-                                TraitsClientProvider(),
-                                ClientProvider(),
-                                CacheManagerProvider(),
-                                TasksControllerProvider(),
-                              ],
-                              child: LoadingCore(
-                                child: ErrorNotifier(
-                                  navigatorKey: navigatorKey,
-                                  child: OnboardingGate(
-                                    child: AccountConnector(
-                                      navigatorKey: navigatorKey,
-                                      child: FollowConnector(
-                                        child: AppLinkHandler(
-                                          navigatorKey: navigatorKey,
-                                          child: NotificationHandler(
-                                            navigatorKey: navigatorKey,
-                                            child: TasksOverlayHost(
-                                              navigatorKey: navigatorKey,
-                                              child: child!,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                  child: LoadingCore(
+                    child: ErrorNotifier(
+                      navigatorKey: widget.navigatorKey,
+                      child: OnboardingGate(
+                        child: AccountConnector(
+                          navigatorKey: widget.navigatorKey,
+                          child: FollowConnector(
+                            child: AppLinkHandler(
+                              navigatorKey: widget.navigatorKey,
+                              child: NotificationHandler(
+                                navigatorKey: widget.navigatorKey,
+                                child: TasksOverlayHost(
+                                  navigatorKey: widget.navigatorKey,
+                                  child: child!,
                                 ),
                               ),
                             ),

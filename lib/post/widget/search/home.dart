@@ -31,9 +31,10 @@ class _HomePageState extends State<HomePage> with RouterDrawerEntryWidget {
                   ),
                 ),
                 builder: (context) => PostsPage(
-                  appBar: const DefaultAppBar(
-                    title: Center(child: AppIcon()),
-                    actions: [ContextDrawerButton()],
+                  appBar: DefaultAppBar(
+                    leading: Theme.of(context).platform == TargetPlatform.iOS ? PostsPageSearchIconButton(controller: controller) : null,
+                    title: const Center(child: AppIcon()),
+                    actions: const [ContextDrawerButton()],
                   ),
                   controller: controller,
                 ),

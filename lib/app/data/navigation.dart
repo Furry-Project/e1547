@@ -22,6 +22,7 @@ final List<RouterDrawerDestination> rootDestintations = [
     builder: (context) => const HomePage(),
     unique: true,
     group: _drawerSearchGroup,
+    bottomTab: true,
   ),
   NamedRouterDrawerDestination(
     path: '/hot',
@@ -30,13 +31,7 @@ final List<RouterDrawerDestination> rootDestintations = [
     builder: (context) => const HotPage(),
     unique: true,
     group: _drawerSearchGroup,
-  ),
-  NamedRouterDrawerDestination(
-    path: '/search',
-    name: 'Search',
-    icon: const Icon(Icons.search),
-    builder: (context) => const PostsSearchPage(),
-    group: _drawerSearchGroup,
+    bottomTab: true,
   ),
   NamedRouterDrawerDestination(
     path: '/favorites',
@@ -44,8 +39,19 @@ final List<RouterDrawerDestination> rootDestintations = [
     icon: const Icon(Icons.favorite),
     builder: (context) => const FavPage(),
     unique: true,
-    group: _drawerFollowsGroup,
+    group: _drawerSearchGroup,
+    bottomTab: true,
   ),
+  NamedRouterDrawerDestination(
+    path: '/search',
+    name: 'Search',
+    icon: const Icon(Icons.search),
+    builder: (context) => const PostsSearchPage(),
+    unique: true,
+    group: _drawerSearchGroup,
+    bottomTab: true,
+  ),
+
   NamedRouterDrawerDestination(
     path: '/timeline',
     name: 'Timeline',
@@ -119,6 +125,14 @@ final List<RouterDrawerDestination> rootDestintations = [
     icon: const DrawerUpdateIcon(),
     builder: (context) => const AboutPage(),
     group: _drawerSettingsGroup,
+  ),
+  NamedRouterDrawerDestination(
+    path: 'MENU',
+    name: 'Menu',
+    icon: const Icon(Icons.menu),
+    builder: (context) => const SizedBox(),
+    group: _drawerSettingsGroup,
+    bottomTab: true,
   ),
 ];
 

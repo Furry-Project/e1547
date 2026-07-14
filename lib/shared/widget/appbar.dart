@@ -190,7 +190,7 @@ class ScrollToTop extends StatelessWidget {
     Widget tapWrapper(Widget? child) {
       ScrollController? controller =
           this.controller ??
-          (primary ? PrimaryScrollController.of(context) : null);
+          (primary ? PrimaryScrollController.maybeOf(context) : null);
       return GestureDetector(
         onDoubleTap: controller != null
             ? () => controller.animateTo(

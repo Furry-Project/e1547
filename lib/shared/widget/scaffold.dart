@@ -133,6 +133,8 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
     endDrawerBreakpoint: 1600,
   );
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   late bool _isInlineDrawerOpen =
       widget.isDrawerOpen ??
       context.read<AdaptiveScaffoldController?>()?.isDrawerOpen ??
@@ -250,7 +252,54 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
           ),
         ];
 
+        Widget? effectiveBottomNavigationBar = widget.bottomNavigationBar;
+        if (effectiveBottomNavigationBar == null && Theme.of(context).platform == TargetPlatform.iOS) {
+          final drawerController = context.watch<RouterDrawerController?>();
+          if (drawerController != null) {
+            final bottomDestinations = drawerController.destinations
+                .whereType<NamedRouterDrawerDestination>()
+                .where((d) => d.bottomTab)
+                .toList();
+            if (bottomDestinations.isNotEmpty) {
+              final currentIndex = bottomDestinations.indexWhere(
+                  (d) => d.path == drawerController.drawerSelection);
+              
+              effectiveBottomNavigationBar = BottomNavigationBar(
+                currentIndex: currentIndex >= 0 ? currentIndex : 0,
+                type: BottomNavigationBarType.fixed,
+                onTap: (index) {
+                  final dest = bottomDestinations[index];
+                  if (dest.path == 'MENU') {
+                    _scaffoldKey.currentState?.openDrawer();
+                    return;
+                  }
+                  if (dest.path != drawerController.drawerSelection) {
+                    final builder = drawerController.routes[dest.path];
+                    if (builder != null) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        PageRouteBuilder(
+                          pageBuilder: (context, _, __) => builder(context),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
+                        (_) => false,
+                      );
+                    }
+                  }
+                },
+                items: bottomDestinations.map((d) {
+                  return BottomNavigationBarItem(
+                    icon: d.icon ?? const Icon(Icons.circle),
+                    label: d.name,
+                  );
+                }).toList(),
+              );
+            }
+          }
+        }
+
         return _AdaptiveScaffoldBody(
+          key: _scaffoldKey,
           appBar: widget.appBar,
           body: Row(children: bodyChildren),
           floatingActionButton: widget.floatingActionButton,
@@ -263,7 +312,7 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
           endDrawer: effectiveEndDrawer,
           endDrawerAction: endDrawerAction,
           onEndDrawerChanged: widget.onEndDrawerChanged,
-          bottomNavigationBar: widget.bottomNavigationBar,
+          bottomNavigationBar: effectiveBottomNavigationBar,
           bottomSheet: widget.bottomSheet,
           backgroundColor: widget.backgroundColor,
           resizeToAvoidBottomInset: widget.resizeToAvoidBottomInset,
@@ -284,6 +333,7 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
 
 class _AdaptiveScaffoldBody extends Scaffold {
   const _AdaptiveScaffoldBody({
+    super.key,
     super.appBar,
     super.body,
     super.floatingActionButton,

@@ -35,9 +35,10 @@ class FavPage extends StatelessWidget {
               ),
               child: (context) => PostsPage(
                 controller: controller,
-                appBar: const DefaultAppBar(
-                  title: Text('Favorites'),
-                  actions: [ContextDrawerButton()],
+                appBar: DefaultAppBar(
+                  leading: Theme.of(context).platform == TargetPlatform.iOS ? PostsPageSearchIconButton(controller: controller) : null,
+                  title: const Text('Favorites'),
+                  actions: const [ContextDrawerButton()],
                 ),
                 drawerActions: [
                   if (controller.query['tags']?.isEmpty ?? true)

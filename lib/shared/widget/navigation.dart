@@ -24,6 +24,7 @@ class NamedRouterDrawerDestination<T extends Widget>
     this.group,
     this.visible,
     this.enabled,
+    this.bottomTab = false,
     required super.path,
     required T Function(BuildContext context) builder,
     super.unique,
@@ -34,6 +35,7 @@ class NamedRouterDrawerDestination<T extends Widget>
   final RouterDrawerSettingCallback? enabled;
   final Widget? icon;
   final String? group;
+  final bool bottomTab;
 }
 
 class RouterDrawerController extends ChangeNotifier {

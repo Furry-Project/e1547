@@ -2,6 +2,7 @@ export 'action.dart';
 export 'animation.dart';
 export 'appbar.dart';
 export 'autocomplete.dart';
+export 'button.dart';
 export 'card.dart';
 export 'checkbox.dart';
 export 'date.dart';

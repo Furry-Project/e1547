@@ -10,6 +10,7 @@ _User _$UserFromJson(Map<String, dynamic> json) => _User(
   id: (json['id'] as num).toInt(),
   name: json['name'] as String,
   avatarId: (json['avatar_id'] as num?)?.toInt(),
+  hasCroppedAvatar: json['has_cropped_avatar'] as bool? ?? false,
   about: json['about'] == null ? null : UserAbout.fromJson(json['about']),
   stats: json['stats'] == null ? null : UserStats.fromJson(json['stats']),
 );
@@ -18,6 +19,7 @@ Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
   'avatar_id': instance.avatarId,
+  'has_cropped_avatar': instance.hasCroppedAvatar,
   'about': instance.about,
   'stats': instance.stats,
 };

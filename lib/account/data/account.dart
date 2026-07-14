@@ -9,6 +9,7 @@ abstract class Account with _$Account {
     required int id,
     required String name,
     required int? avatarId,
+    @Default(false) bool hasCroppedAvatar,
     required String? blacklistedTags,
     required int? perPage,
   }) = _Account;

@@ -25,10 +25,34 @@ class IdentityAvatar extends StatelessWidget {
 }
 
 class UserAvatar extends StatelessWidget {
-  const UserAvatar({super.key, required this.controller, required this.id});
+  const UserAvatar({
+    super.key,
+    required this.controller,
+    required this.id,
+    required this.userId,
+    required this.hasCroppedAvatar,
+  });
 
   final PostController? controller;
   final int? id;
+  final int userId;
+  final bool hasCroppedAvatar;
+
+  String? _resolve(Post? post) {
+    if (post == null) return null;
+    if (hasCroppedAvatar && !post.isDeleted) {
+      String? reference = post.sample ?? post.preview ?? post.file;
+      if (reference != null) {
+        String? url = croppedAvatarUrl(
+          reference: reference,
+          userId: userId,
+          avatarId: post.id,
+        );
+        if (url != null) return url;
+      }
+    }
+    return post.sample;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +71,7 @@ class UserAvatar extends StatelessWidget {
         id: id,
         controller: controller,
         builder: (context, post) => Avatar(
-          post?.sample,
+          _resolve(post),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => PostsControllerConnector(
@@ -67,9 +91,16 @@ class UserAvatar extends StatelessWidget {
 }
 
 class PostAvatar extends StatelessWidget {
-  const PostAvatar({super.key, required this.id});
+  const PostAvatar({
+    super.key,
+    required this.id,
+    required this.userId,
+    required this.hasCroppedAvatar,
+  });
 
   final int? id;
+  final int userId;
+  final bool hasCroppedAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +110,12 @@ class PostAvatar extends StatelessWidget {
       return SinglePostProvider(
         id: id!,
         child: Consumer<PostController>(
-          builder: (context, controller, child) =>
-              UserAvatar(id: id, controller: controller),
+          builder: (context, controller, child) => UserAvatar(
+            id: id,
+            controller: controller,
+            userId: userId,
+            hasCroppedAvatar: hasCroppedAvatar,
+          ),
         ),
       );
     }

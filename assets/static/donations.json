@@ -11,6 +11,30 @@
       {
         "amount": 3.0,
         "currency": "USD",
+        "date": "2026-06-07T12:20:00",
+        "platform": "ko-fi"
+      },
+      {
+        "amount": 3.0,
+        "currency": "USD",
+        "date": "2026-05-07T11:55:00",
+        "platform": "ko-fi"
+      },
+      {
+        "amount": 3.0,
+        "currency": "USD",
+        "date": "2026-04-07T12:26:00",
+        "platform": "ko-fi"
+      },
+      {
+        "amount": 3.0,
+        "currency": "USD",
+        "date": "2026-03-07T11:04:00",
+        "platform": "ko-fi"
+      },
+      {
+        "amount": 3.0,
+        "currency": "USD",
         "date": "2026-02-07T09:21:00",
         "platform": "ko-fi"
       },
@@ -372,6 +396,12 @@
         "currency": "USD",
         "date": "2024-07-15T06:50:00",
         "platform": "ko-fi"
+      },
+      {
+        "amount": 3.0,
+        "currency": "USD",
+        "date": "2022-05-14T02:07:00",
+        "platform": "ko-fi"
       }
     ]
   },
@@ -412,6 +442,12 @@
       "github": "hunting4code"
     },
     "donations": [
+      {
+        "amount": 45.0,
+        "currency": "USD",
+        "date": "2026-06-21T12:27:00",
+        "platform": "ko-fi"
+      },
       {
         "amount": 25.0,
         "currency": "USD",
@@ -506,6 +542,48 @@
         "amount": 5.0,
         "currency": "USD",
         "date": "2025-10-08T13:40:00",
+        "platform": "ko-fi"
+      }
+    ]
+  },
+  {
+    "name": "Foxfire",
+    "handles": {
+      "ko-fi": "Foxfire"
+    },
+    "donations": [
+      {
+        "amount": 51.0,
+        "currency": "USD",
+        "date": "2026-05-31T01:04:00",
+        "platform": "ko-fi"
+      }
+    ]
+  },
+  {
+    "name": "Sludgemau5",
+    "handles": {
+      "ko-fi": "Sludgemau5"
+    },
+    "donations": [
+      {
+        "amount": 15.0,
+        "currency": "USD",
+        "date": "2026-06-27T00:05:00",
+        "platform": "ko-fi"
+      }
+    ]
+  },
+  {
+    "name": "TenaciousDuane",
+    "handles": {
+      "ko-fi": "TenaciousDuane"
+    },
+    "donations": [
+      {
+        "amount": 12.0,
+        "currency": "USD",
+        "date": "2026-07-06T13:15:00",
         "platform": "ko-fi"
       }
     ]

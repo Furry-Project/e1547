@@ -1,6 +1,6 @@
 import 'package:e1547/identity/identity.dart';
-import 'package:e1547/settings/settings.dart';
 import 'package:e1547/shared/shared.dart';
+import 'package:e1547/user/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sub/flutter_sub.dart';
 
@@ -20,8 +20,9 @@ class IdentitiesPage extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: IdentityTile(
-            identity: identity,
+          child: ListTile(
+            leading: IdentityAvatar(identity.id),
+            title: Text(identity.usernameOrAnon),
             onTap: () {
               context.read<IdentityClient>().activate(identity.id);
               Navigator.of(context).maybePop();
@@ -40,14 +41,14 @@ class IdentitiesPage extends StatelessWidget {
                   ),
                 ),
                 PopupMenuTile(
-                  title: 'Delete',
+                  title: 'Remove',
                   icon: Icons.delete,
                   value: () => showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Delete identity?'),
+                      title: const Text('Remove account?'),
                       content: const Text(
-                        'All your data will be permanently removed, including history and follows.',
+                        'All its data will be permanently removed, including history and follows.',
                       ),
                       actions: [
                         TextButton(
@@ -55,7 +56,7 @@ class IdentitiesPage extends StatelessWidget {
                           child: const Text('CANCEL'),
                         ),
                         ElevatedButton(
-                          child: const Text('DELETE'),
+                          child: const Text('REMOVE'),
                           onPressed: () {
                             Navigator.of(context).maybePop();
                             context.read<IdentityClient>().remove(identity);
@@ -74,23 +75,34 @@ class IdentitiesPage extends StatelessWidget {
   }
 
   Widget form(BuildContext context, List<Identity> identities) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    Map<String, List<Identity>> groups = {};
+    for (final identity in identities) {
+      groups.putIfAbsent(identity.host, () => []).add(identity);
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Text(
+            'Accounts',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+        for (final MapEntry(key: host, value: group) in groups.entries) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
             child: Text(
-              'Identity',
-              style: Theme.of(context).textTheme.titleLarge,
+              linkToDisplay(host),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
-          const SizedBox(height: 20),
-          for (final identity in identities) tile(context, identity),
+          for (final identity in group) tile(context, identity),
         ],
-      ),
+      ],
     );
   }
 
@@ -115,76 +127,27 @@ class IdentitiesPage extends StatelessWidget {
                     ),
                   )
                 : null,
-            body: LayoutBuilder(
-              builder: (context, constraints) {
-                bool isWide = constraints.maxWidth > 1100;
-                return Column(
+            body: LimitedWidthLayout.builder(
+              maxWidth: 520,
+              builder: (context) => Center(
+                child: ListView(
+                  padding: LimitedWidthLayout.of(
+                    context,
+                  ).padding.add(defaultActionListPadding),
+                  shrinkWrap: true,
                   children: [
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: isWide
-                            ? CrossAxisAlignment.center
-                            : CrossAxisAlignment.start,
-                        children: [
-                          if (isWide)
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const AppIcon(radius: 64),
-                                  const SizedBox(height: 32),
-                                  Text(
-                                    AppInfo.instance.appName,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          SizedBox(
-                            width: isWide ? 700 : constraints.maxWidth,
-                            child: LimitedWidthLayout.builder(
-                              maxWidth: 520,
-                              builder: (context) => Center(
-                                child: ListView(
-                                  padding: LimitedWidthLayout.of(
-                                    context,
-                                  ).padding.add(defaultActionListPadding),
-                                  shrinkWrap: true,
-                                  children: [
-                                    if (!isWide)
-                                      const SizedBox(
-                                        height: 300,
-                                        child: Center(
-                                          child: AppIcon(radius: 64),
-                                        ),
-                                      ),
-                                    if (identities == null)
-                                      const Center(
-                                        child: CircularProgressIndicator(),
-                                      )
-                                    else if (snapshot.hasError)
-                                      const IconMessage(
-                                        icon: Icon(Icons.warning_amber),
-                                        title: Text(
-                                          'Failed to load identities',
-                                        ),
-                                      )
-                                    else
-                                      form(context, identities),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    if (identities == null)
+                      const Center(child: CircularProgressIndicator())
+                    else if (snapshot.hasError)
+                      const IconMessage(
+                        icon: Icon(Icons.warning_amber),
+                        title: Text('Failed to load identities'),
+                      )
+                    else
+                      form(context, identities),
                   ],
-                );
-              },
+                ),
+              ),
             ),
           );
         },

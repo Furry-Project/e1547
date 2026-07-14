@@ -22,31 +22,40 @@ class _CookieCapturePageState extends State<CookieCapturePage> {
     ..setUserAgent(AppInfo.instance.userAgent)
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..setBackgroundColor(Theme.of(context).colorScheme.surface)
-    ..loadRequest(Uri.https(context.read<Client>().host));
+    ..loadRequest(Uri.parse(normalizeHostUrl(context.read<Client>().host)));
 
   Future<void> setCookies(BuildContext context) async {
     IdentityClient client = context.read<IdentityClient>();
     WebviewCookieManager cookieManager = WebviewCookieManager();
     List<Cookie> cookies = await cookieManager.getCookies(client.identity.host);
-    Map<String, String> headers = client.identity.headers ?? {};
-    String? cookieHeader = headers['Cookie'];
-    if (cookieHeader != null) {
-      cookieHeader.split('; ').forEach((String cookie) {
-        List<String> splitCookie = cookie.split('=');
-        if (splitCookie.length == 2) {
-          headers[splitCookie[0]] = splitCookie[1];
-        }
-      });
+
+    Map<String, String> headers = Map.of(client.identity.headers ?? {});
+    // Drop cookies the old logic wrongly stored as top-level headers.
+    Set<String> captured = cookies.map((cookie) => cookie.name).toSet();
+    headers.removeWhere(
+      (key, value) => isCloudflareCookie(key) || captured.contains(key),
+    );
+
+    Map<String, String> jar = {};
+    String? existing = headers[HttpHeaders.cookieHeader];
+    if (existing != null) {
+      for (final pair in existing.split('; ')) {
+        int split = pair.indexOf('=');
+        if (split <= 0) continue;
+        String name = pair.substring(0, split);
+        if (isCloudflareCookie(name)) jar[name] = pair.substring(split + 1);
+      }
     }
+
     for (final cookie in cookies) {
-      headers[cookie.name] = cookie.value;
+      if (isCloudflareCookie(cookie.name)) jar[cookie.name] = cookie.value;
     }
-    List<String> cookieList = [];
-    for (final cookie in headers.entries) {
-      cookieList.add('${cookie.key}=${cookie.value}');
-    }
-    String newCookieHeader = cookieList.join('; ');
-    headers[HttpHeaders.cookieHeader] = newCookieHeader;
+
+    if (jar.isEmpty) return;
+
+    headers[HttpHeaders.cookieHeader] = jar.entries
+        .map((entry) => '${entry.key}=${entry.value}')
+        .join('; ');
     client.replace(client.identity.copyWith(headers: headers));
   }
 
@@ -64,4 +73,10 @@ class _CookieCapturePageState extends State<CookieCapturePage> {
       ),
     );
   }
+}
+
+bool isCloudflareCookie(String name) {
+  // Challenge state cookies are transient and pointless to persist.
+  if (name.startsWith('cf_chl')) return false;
+  return name.startsWith('cf_') || name.startsWith('__cf');
 }

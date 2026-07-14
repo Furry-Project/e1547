@@ -148,26 +148,37 @@ class PagedSliverGroupedListView<PageKeyType, ItemType, SortType>
       IndexedWidgetBuilder itemBuilder,
       int itemCount, {
       WidgetBuilder? statusIndicatorBuilder,
-    }) => SliverMainAxisGroup(
-      slivers: [
-        SliverGroupedListView<ItemType, SortType>(
-          key: key,
-          elements: state.items!,
-          groupBy: groupBy,
-          groupComparator: groupComparator,
-          groupSeparatorBuilder: groupSeparatorBuilder,
-          groupHeaderBuilder: groupHeaderBuilder,
-          indexedItemBuilder: (context, item, index) =>
-              itemBuilder(context, index),
-          itemComparator: itemComparator,
-          order: order,
-          sort: sort,
-          separator: separator,
-        ),
-        if (statusIndicatorBuilder != null)
-          SliverToBoxAdapter(child: statusIndicatorBuilder(context)),
-      ],
-    );
+    }) {
+      // SliverGroupedListView sorts its items, so the item index in its builder
+      // is within a sorted list, not the original list.
+      // To prevent children from being confused when trying to find their item
+      // in the original list, we keep a map.
+      final items = state.items!;
+      final itemIndices = Map<ItemType, int>.identity();
+      for (int i = 0; i < items.length; i++) {
+        itemIndices[items[i]] = i;
+      }
+      return SliverMainAxisGroup(
+        slivers: [
+          SliverGroupedListView<ItemType, SortType>(
+            key: key,
+            elements: items,
+            groupBy: groupBy,
+            groupComparator: groupComparator,
+            groupSeparatorBuilder: groupSeparatorBuilder,
+            groupHeaderBuilder: groupHeaderBuilder,
+            indexedItemBuilder: (context, item, index) =>
+                itemBuilder(context, itemIndices[item] ?? index),
+            itemComparator: itemComparator,
+            order: order,
+            sort: sort,
+            separator: separator,
+          ),
+          if (statusIndicatorBuilder != null)
+            SliverToBoxAdapter(child: statusIndicatorBuilder(context)),
+        ],
+      );
+    }
 
     return PagedLayoutBuilder<PageKeyType, ItemType>(
       layoutProtocol: PagedLayoutProtocol.sliver,

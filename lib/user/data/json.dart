@@ -7,6 +7,7 @@ abstract final class E621User {
       id: json['id'],
       name: json['name'],
       avatarId: json['avatar_id'],
+      hasCroppedAvatar: json['has_cropped_avatar'] == true,
       about: UserAbout(
         bio: json['profile_about'],
         comission: json['profile_artinfo'],

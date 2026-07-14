@@ -9,6 +9,25 @@ export 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 // TODO: Controllers now also throw Database exceptions, so this needs to be a real class.
 typedef ClientException = DioException;
 
+bool isCloudflareChallenge(Response? response) {
+  if (response == null) return false;
+  // Set on managed (403) and legacy JS (503) challenges alike.
+  final String? mitigated = response.headers.value('cf-mitigated');
+  if (mitigated?.toLowerCase() == 'challenge') return true;
+  final String? server = response.headers.value(HttpHeaders.serverHeader);
+  if (server != null && server.toLowerCase().contains('cloudflare')) {
+    final dynamic data = response.data;
+    if (data is String) {
+      return const [
+        'challenge-platform',
+        'cf-chl',
+        '_cf_chl_opt',
+      ].any(data.contains);
+    }
+  }
+  return false;
+}
+
 Future<bool> validateCall(Future<void> Function() call) async {
   try {
     await call();

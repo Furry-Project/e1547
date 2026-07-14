@@ -42,6 +42,15 @@ class LoadingShellState {
 class LoadingShellController extends ValueNotifier<LoadingShellState> {
   LoadingShellController([LoadingShellState? state])
     : super(state ?? const LoadingShellState());
+
+  bool _disposed = false;
+  bool get isDisposed => _disposed;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 }
 
 class _LoadingShellScope extends InheritedNotifier<LoadingShellController> {
@@ -195,8 +204,11 @@ class _LoadingLayerState<T> extends State<LoadingLayer<T>> {
 
   @override
   void dispose() {
+    final capturedState = state;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      state.value = const LoadingShellState();
+      if (!capturedState.isDisposed) {
+        capturedState.value = const LoadingShellState();
+      }
     });
     super.dispose();
   }
@@ -256,8 +268,11 @@ class _LoadingCoreState extends State<LoadingCore> {
 
   @override
   void dispose() {
+    final capturedState = state;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      state.value = state.value.copyWith(loading: true);
+      if (!capturedState.isDisposed) {
+        capturedState.value = capturedState.value.copyWith(loading: true);
+      }
     });
     super.dispose();
   }

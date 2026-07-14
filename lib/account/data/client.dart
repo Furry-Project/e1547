@@ -76,12 +76,26 @@ class AccountClient {
       );
     }
 
+    String? avatarUrl = avatar?.file;
+    if (avatar != null && result.hasCroppedAvatar && !avatar.isDeleted) {
+      String? reference = avatar.file ?? avatar.sample ?? avatar.preview;
+      if (reference != null) {
+        avatarUrl =
+            croppedAvatarUrl(
+              reference: reference,
+              userId: result.id,
+              avatarId: avatar.id,
+            ) ??
+            avatarUrl;
+      }
+    }
+
     traits.value = traits.value.copyWith(
       // TODO: also store "id"
       denylist: result.blacklistedTags?.split('\n').trim() ?? [],
       // TODO: also store "perPage"
       // TODO: this shouldn't be file but sample
-      avatar: avatar?.file,
+      avatar: avatarUrl,
     );
 
     return result;
@@ -94,6 +108,7 @@ extension E621Account on Account {
       id: pick('id').asIntOrThrow(),
       name: pick('name').asStringOrThrow(),
       avatarId: pick('avatar_id').asIntOrNull(),
+      hasCroppedAvatar: pick('has_cropped_avatar').asBoolOrFalse(),
       blacklistedTags: pick('blacklisted_tags').asStringOrNull(),
       perPage: pick('per_page').asIntOrNull(),
     ),

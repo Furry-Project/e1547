@@ -11,13 +11,13 @@ class PostDetail extends StatelessWidget {
   final Post post;
   final VoidCallback? onTapImage;
 
-  Widget image(BuildContext context, BoxConstraints constraints) => Padding(
+  Widget image(BuildContext context, Size size) => Padding(
     padding: const EdgeInsets.only(bottom: 10),
     child: ConstrainedBox(
       constraints: BoxConstraints(
-        minHeight: (constraints.maxHeight / 2),
-        maxHeight: constraints.maxWidth > constraints.maxHeight
-            ? max(400, constraints.maxHeight * 0.8)
+        minHeight: (size.height / 2),
+        maxHeight: size.width > size.height
+            ? max(400, size.height * 0.8)
             : double.infinity,
       ),
       child: AnimatedSize(
@@ -88,9 +88,10 @@ class PostDetail extends StatelessWidget {
           body: MediaQuery.removeViewInsets(
             context: context,
             removeTop: true,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 1000) {
+            child: Builder(
+              builder: (context) {
+                final size = MediaQuery.sizeOf(context);
+                if (size.width < 1000) {
                   return ListView(
                     primary: true,
                     padding: EdgeInsets.only(
@@ -98,7 +99,7 @@ class PostDetail extends StatelessWidget {
                       bottom: kBottomNavigationBarHeight + 24,
                     ),
                     children: [
-                      image(context, constraints),
+                      image(context, size),
                       upperBody(context),
                       middleBody(context),
                       lowerBody(context),
@@ -106,7 +107,7 @@ class PostDetail extends StatelessWidget {
                   );
                 } else {
                   double sideBarWidth;
-                  if (constraints.maxWidth > 1400) {
+                  if (size.width > 1400) {
                     sideBarWidth = 404;
                   } else {
                     sideBarWidth = 304;
@@ -121,7 +122,7 @@ class PostDetail extends StatelessWidget {
                               SliverToBoxAdapter(
                                 child: Column(
                                   children: [
-                                    image(context, constraints),
+                                    image(context, size),
                                     upperBody(context),
                                   ],
                                 ),

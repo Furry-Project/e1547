@@ -27,7 +27,7 @@ class SettingsPage extends StatelessWidget {
               LimitedWidthLayout.of(context).padding,
             ),
             children: [
-              const ListTileHeader(title: 'Identity'),
+              const ListTileHeader(title: 'Account'),
               Consumer<IdentityClient>(
                 builder: (context, client, child) => IdentityTile(
                   identity: client.identity,

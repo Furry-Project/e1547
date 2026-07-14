@@ -9,6 +9,7 @@ abstract class User with _$User {
     required int id,
     required String name,
     required int? avatarId,
+    @Default(false) bool hasCroppedAvatar,
     required UserAbout? about,
     required UserStats? stats,
   }) = _User;

@@ -40,25 +40,28 @@ class _AvailabilityCheckState extends State<AvailabilityCheck> {
         logger.fine('Client availability check cancelled!');
         return;
       }
-      int? statusCode = e.response?.statusCode;
-      if (statusCode == null) return;
-      switch (statusCode) {
-        case HttpStatus.serviceUnavailable:
-          logger.warning('Client is unavailable, attempting resolve!');
-          offerResolve = true;
-          break;
-        case HttpStatus.forbidden:
-          logger.warning('Client has denied access! Failing silently...');
-          // This could potentially logout the user.
-          // However, it might be returned during Cloudflare API blockages.
-          // Logout the user, and if theyre already logged out, trigger Resolver?
-          break;
-        case >= 500 && < 600:
-          logger.warning('Client is unavailable, resolve not possible!');
-          offerResolve = false;
-          return;
-        default:
-          logger.severe('Availability Check failed!', e, stacktrace);
+      if (isCloudflareChallenge(e.response)) {
+        logger.warning(
+          'Client is behind a Cloudflare challenge, attempting resolve!',
+        );
+        offerResolve = true;
+      } else {
+        int? statusCode = e.response?.statusCode;
+        if (statusCode == null) return;
+        switch (statusCode) {
+          case HttpStatus.forbidden:
+            logger.warning('Client has denied access! Failing silently...');
+            // This could potentially logout the user.
+            // However, it might be returned during Cloudflare API blockages.
+            // Logout the user, and if theyre already logged out, trigger Resolver?
+            break;
+          case >= 500 && < 600:
+            logger.warning('Client is unavailable, resolve not possible!');
+            offerResolve = false;
+            break;
+          default:
+            logger.severe('Availability Check failed!', e, stacktrace);
+        }
       }
     }
 

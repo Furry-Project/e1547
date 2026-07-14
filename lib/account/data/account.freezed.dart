@@ -1,6 +1,5 @@
-// dart format width=80
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -16,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Account {
 
- int get id; String get name; int? get avatarId; String? get blacklistedTags; int? get perPage;
+ int get id; String get name; int? get avatarId; bool get hasCroppedAvatar; String? get blacklistedTags; int? get perPage;
 /// Create a copy of Account
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +28,16 @@ $AccountCopyWith<Account> get copyWith => _$AccountCopyWithImpl<Account>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Account&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarId, avatarId) || other.avatarId == avatarId)&&(identical(other.blacklistedTags, blacklistedTags) || other.blacklistedTags == blacklistedTags)&&(identical(other.perPage, perPage) || other.perPage == perPage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Account&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarId, avatarId) || other.avatarId == avatarId)&&(identical(other.hasCroppedAvatar, hasCroppedAvatar) || other.hasCroppedAvatar == hasCroppedAvatar)&&(identical(other.blacklistedTags, blacklistedTags) || other.blacklistedTags == blacklistedTags)&&(identical(other.perPage, perPage) || other.perPage == perPage));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,avatarId,blacklistedTags,perPage);
+int get hashCode => Object.hash(runtimeType,id,name,avatarId,hasCroppedAvatar,blacklistedTags,perPage);
 
 @override
 String toString() {
-  return 'Account(id: $id, name: $name, avatarId: $avatarId, blacklistedTags: $blacklistedTags, perPage: $perPage)';
+  return 'Account(id: $id, name: $name, avatarId: $avatarId, hasCroppedAvatar: $hasCroppedAvatar, blacklistedTags: $blacklistedTags, perPage: $perPage)';
 }
 
 
@@ -49,7 +48,7 @@ abstract mixin class $AccountCopyWith<$Res>  {
   factory $AccountCopyWith(Account value, $Res Function(Account) _then) = _$AccountCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, int? avatarId, String? blacklistedTags, int? perPage
+ int id, String name, int? avatarId, bool hasCroppedAvatar, String? blacklistedTags, int? perPage
 });
 
 
@@ -66,12 +65,13 @@ class _$AccountCopyWithImpl<$Res>
 
 /// Create a copy of Account
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? avatarId = freezed,Object? blacklistedTags = freezed,Object? perPage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? avatarId = freezed,Object? hasCroppedAvatar = null,Object? blacklistedTags = freezed,Object? perPage = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,avatarId: freezed == avatarId ? _self.avatarId : avatarId // ignore: cast_nullable_to_non_nullable
-as int?,blacklistedTags: freezed == blacklistedTags ? _self.blacklistedTags : blacklistedTags // ignore: cast_nullable_to_non_nullable
+as int?,hasCroppedAvatar: null == hasCroppedAvatar ? _self.hasCroppedAvatar : hasCroppedAvatar // ignore: cast_nullable_to_non_nullable
+as bool,blacklistedTags: freezed == blacklistedTags ? _self.blacklistedTags : blacklistedTags // ignore: cast_nullable_to_non_nullable
 as String?,perPage: freezed == perPage ? _self.perPage : perPage // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
@@ -80,16 +80,18 @@ as int?,
 }
 
 
+
 /// @nodoc
 @JsonSerializable()
 
 class _Account implements Account {
-  const _Account({required this.id, required this.name, required this.avatarId, required this.blacklistedTags, required this.perPage});
+  const _Account({required this.id, required this.name, required this.avatarId, this.hasCroppedAvatar = false, required this.blacklistedTags, required this.perPage});
   factory _Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
 
 @override final  int id;
 @override final  String name;
 @override final  int? avatarId;
+@override@JsonKey() final  bool hasCroppedAvatar;
 @override final  String? blacklistedTags;
 @override final  int? perPage;
 
@@ -106,16 +108,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Account&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarId, avatarId) || other.avatarId == avatarId)&&(identical(other.blacklistedTags, blacklistedTags) || other.blacklistedTags == blacklistedTags)&&(identical(other.perPage, perPage) || other.perPage == perPage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Account&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarId, avatarId) || other.avatarId == avatarId)&&(identical(other.hasCroppedAvatar, hasCroppedAvatar) || other.hasCroppedAvatar == hasCroppedAvatar)&&(identical(other.blacklistedTags, blacklistedTags) || other.blacklistedTags == blacklistedTags)&&(identical(other.perPage, perPage) || other.perPage == perPage));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,avatarId,blacklistedTags,perPage);
+int get hashCode => Object.hash(runtimeType,id,name,avatarId,hasCroppedAvatar,blacklistedTags,perPage);
 
 @override
 String toString() {
-  return 'Account(id: $id, name: $name, avatarId: $avatarId, blacklistedTags: $blacklistedTags, perPage: $perPage)';
+  return 'Account(id: $id, name: $name, avatarId: $avatarId, hasCroppedAvatar: $hasCroppedAvatar, blacklistedTags: $blacklistedTags, perPage: $perPage)';
 }
 
 
@@ -126,7 +128,7 @@ abstract mixin class _$AccountCopyWith<$Res> implements $AccountCopyWith<$Res> {
   factory _$AccountCopyWith(_Account value, $Res Function(_Account) _then) = __$AccountCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, int? avatarId, String? blacklistedTags, int? perPage
+ int id, String name, int? avatarId, bool hasCroppedAvatar, String? blacklistedTags, int? perPage
 });
 
 
@@ -143,12 +145,13 @@ class __$AccountCopyWithImpl<$Res>
 
 /// Create a copy of Account
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? avatarId = freezed,Object? blacklistedTags = freezed,Object? perPage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? avatarId = freezed,Object? hasCroppedAvatar = null,Object? blacklistedTags = freezed,Object? perPage = freezed,}) {
   return _then(_Account(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,avatarId: freezed == avatarId ? _self.avatarId : avatarId // ignore: cast_nullable_to_non_nullable
-as int?,blacklistedTags: freezed == blacklistedTags ? _self.blacklistedTags : blacklistedTags // ignore: cast_nullable_to_non_nullable
+as int?,hasCroppedAvatar: null == hasCroppedAvatar ? _self.hasCroppedAvatar : hasCroppedAvatar // ignore: cast_nullable_to_non_nullable
+as bool,blacklistedTags: freezed == blacklistedTags ? _self.blacklistedTags : blacklistedTags // ignore: cast_nullable_to_non_nullable
 as String?,perPage: freezed == perPage ? _self.perPage : perPage // ignore: cast_nullable_to_non_nullable
 as int?,
   ));

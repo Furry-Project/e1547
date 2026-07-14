@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:e1547/app/app.dart';
+import 'package:e1547/client/client.dart';
+import 'package:e1547/identity/identity.dart';
 import 'package:e1547/logs/logs.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -22,6 +24,7 @@ Future<void> initializeAppInfo() => AppInfo.initializePlatform(
   website: 'e1547.clynamic.net',
   kofi: 'binaryfloof',
   email: 'support@clynamic.net',
+  forumTopicId: 25854,
 );
 
 Future<String> getTemporaryAppDirectory() => getTemporaryDirectory().then(
@@ -120,6 +123,18 @@ Future<AppStorage> initializeAppStorage({bool cache = true}) async {
       ),
     ),
   );
+}
+
+Future<void> backfillOnboardingSeen(AppStorage storage) async {
+  if (storage.preferences.getBool('onboardingSeen') ?? false) return;
+  final identities = await IdentityRepository(storage.sqlite).all();
+  final defaultHost = ClientFactory().createDefaultIdentity().host;
+  final existing =
+      identities.length > 1 ||
+      identities.any((identity) => identity.host != defaultHost);
+  if (existing) {
+    await storage.preferences.setBool('onboardingSeen', true);
+  }
 }
 
 Future<void> completeDbImport() async {

@@ -46,6 +46,8 @@
 APK and IPA files can be found over at
 the [releases](https://github.com/clynamic/e1547/releases/latest).
 
+A great tool for managing updates for this app is [obtainium](https://github.com/ImranR98/Obtainium) (see [Using Obtainium](#Using-Obtainium) for a more detailed guide).
+
 You can also find the app on the Google PlayStore:
 
 <a href="https://play.google.com/store/apps/details?id=net.e1547">
@@ -72,6 +74,14 @@ or
 1. Download the [latest APK](https://github.com/clynamic/e1547/releases/latest)
 2. Open it on your Android device with a file manager
 3. Click install
+
+#### Using Obtainium
+
+1. Install and open obtainium from [F-Droid](https://f-droid.org/en/packages/dev.imranr.obtainium.fdroid/) or from their [Github](https://github.com/ImranR98/Obtainium)
+2. Click on "Add app" on the bottom app drawer
+3. Paste https://github.com/clynamic/e1547/releases/ into the "App source URL*" field
+4. Hit the add button, next to the App source URL field
+5. Hit the install button in the following menu
 
 #### Which APK should I download?
 

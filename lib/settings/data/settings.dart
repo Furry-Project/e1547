@@ -47,6 +47,10 @@ class Settings extends NotifiedSettings {
     key: 'upvoteFavs',
     initialValue: false,
   );
+  late final ValueNotifier<bool> doubleTapToFavorite = createSetting<bool>(
+    key: 'doubleTapToFavorite',
+    initialValue: false,
+  );
   late final ValueNotifier<String?> downloadPath = createSetting<String?>(
     key: 'downloadPath',
     initialValue: null,

@@ -1,5 +1,6 @@
 export 'appbar.dart';
 export 'connector.dart';
+export 'favorite_overlay.dart';
 export 'frame.dart';
 export 'hidden.dart';
 export 'image.dart';

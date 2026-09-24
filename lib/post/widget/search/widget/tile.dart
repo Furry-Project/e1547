@@ -9,7 +9,7 @@ import 'package:e1547/settings/settings.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:flutter/material.dart';
 
-class PostImageTile extends StatelessWidget {
+class PostImageTile extends StatefulWidget {
   const PostImageTile({
     super.key,
     required this.post,
@@ -30,11 +30,50 @@ class PostImageTile extends StatelessWidget {
   final Widget? bottomBar;
 
   @override
+  State<PostImageTile> createState() => _PostImageTileState();
+}
+
+class _PostImageTileState extends State<PostImageTile> {
+  final ValueNotifier<int> _heartTrigger = ValueNotifier(0);
+
+  void _handleDoubleTap() {
+    bool doubleTapEnabled = context.read<Settings>().doubleTapToFavorite.value;
+    if (!doubleTapEnabled) return;
+
+    PostController? controller = context.read<PostController?>();
+    if (controller == null) return;
+
+    _heartTrigger.value++;
+
+    if (!widget.post.isFavorited) {
+      bool upvote = context.read<Settings>().upvoteFavs.value;
+      controller.fav(widget.post).then((success) {
+        if (success && upvote) {
+          controller.vote(
+            post: controller.postById(widget.post.id)!,
+            upvote: true,
+            replace: true,
+          );
+        } else if (!success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: const Duration(seconds: 1),
+              content: Text('Failed to add Post #${widget.post.id} to favorites'),
+            ),
+          );
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    bool doubleTapEnabled = context.watch<Settings>().doubleTapToFavorite.value;
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: SelectionItemOverlay(
-        item: post,
+        item: widget.post,
         child: Stack(
           fit: StackFit.passthrough,
           clipBehavior: Clip.none,
@@ -44,28 +83,32 @@ class PostImageTile extends StatelessWidget {
               children: [
                 Expanded(
                   child: PostTileOverlay(
-                    post: post,
+                    post: widget.post,
                     child: Hero(
-                      tag: post.link,
+                      tag: widget.post.link,
                       child: PostImageWidget(
-                        post: post,
-                        size: size ?? PostImageSize.sample,
-                        fit: fit ?? BoxFit.cover,
-                        showProgress: showProgress ?? false,
-                        withLowRes: withLowRes ?? false,
+                        post: widget.post,
+                        size: widget.size ?? PostImageSize.sample,
+                        fit: widget.fit ?? BoxFit.cover,
+                        showProgress: widget.showProgress ?? false,
+                        withLowRes: widget.withLowRes ?? false,
                         cacheSize: context.watch<ImageCacheSize?>()?.size,
                       ),
                     ),
                   ),
                 ),
-                if (bottomBar != null) bottomBar!,
+                if (widget.bottomBar != null) widget.bottomBar!,
               ],
             ),
-            Positioned(top: 0, right: 0, child: PostImageTag(post: post)),
-            if (onTap != null)
+            Positioned(top: 0, right: 0, child: PostImageTag(post: widget.post)),
+            AnimatedHeartOverlay(trigger: _heartTrigger),
+            if (widget.onTap != null)
               Material(
                 type: MaterialType.transparency,
-                child: InkWell(onTap: onTap),
+                child: InkWell(
+                  onTap: widget.onTap,
+                  onDoubleTap: doubleTapEnabled ? _handleDoubleTap : null,
+                ),
               ),
           ],
         ),

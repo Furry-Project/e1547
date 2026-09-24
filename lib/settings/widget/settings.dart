@@ -242,6 +242,18 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               ValueListenableBuilder<bool>(
+                valueListenable: settings.doubleTapToFavorite,
+                builder: (context, value, child) => SwitchListTile(
+                  title: const Text('Double tap to favorite'),
+                  subtitle: Text(
+                    value ? 'double tap post to favorite' : 'default behavior',
+                  ),
+                  secondary: const Icon(Icons.favorite),
+                  value: value,
+                  onChanged: (value) => settings.doubleTapToFavorite.value = value,
+                ),
+              ),
+              ValueListenableBuilder<bool>(
                 valueListenable: settings.muteVideos,
                 builder: (context, value, child) => SwitchListTile(
                   title: const Text('Video volume'),

@@ -1,8 +1,9 @@
 import 'dart:math';
 
 import 'package:drift/drift.dart';
+import 'package:e1547/history/data/database.drift.dart';
 import 'package:e1547/history/history.dart';
-import 'package:e1547/identity/data/database.dart';
+import 'package:e1547/identity/identity.dart';
 import 'package:e1547/shared/shared.dart';
 
 @UseRowClass(History, generateInsertable: true)
@@ -217,11 +218,14 @@ class HistoryRepository extends DatabaseAccessor<GeneratedDatabase>
 
   Future<void> remove(int id) => removeAll([id]);
 
-  Future<void> removeAll(List<int>? ids, {int? identity}) =>
-      (delete(historiesTable)
-            ..where((tbl) => _identityQuery(tbl, identity))
-            ..where((tbl) => Variable(ids).isNull() | tbl.id.isIn(ids!)))
-          .go();
+  Future<void> removeAll(List<int>? ids, {int? identity}) {
+    final query = delete(historiesTable)
+      ..where((tbl) => _identityQuery(tbl, identity));
+    if (ids != null) {
+      query.where((tbl) => tbl.id.isIn(ids));
+    }
+    return query.go();
+  }
 
   Future<void> trim({
     required int maxAmount,

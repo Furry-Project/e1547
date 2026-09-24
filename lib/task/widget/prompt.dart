@@ -2,70 +2,20 @@ import 'package:e1547/shared/shared.dart';
 import 'package:e1547/task/task.dart';
 import 'package:flutter/material.dart';
 
-Future<void> showTasksPrompt(BuildContext context) async {
-  if (Theme.of(context).isDesktop) {
-    return showTasksDialog(context);
-  } else {
-    return showTasksSheet(context);
-  }
-}
-
-Future<void> showTasksSheet(BuildContext context) async =>
-    showDefaultSlidingBottomSheet(
-      context,
-      null,
-      parentBuilder: (context, sheet) => TasksListProvider(
-        child: Consumer<TasksListController>(
-          builder: (context, listController, _) => SelectionLayout<Task>(
-            items: listController.items ?? const [],
-            child: sheet,
-          ),
-        ),
+Future<void> showTasksPrompt(BuildContext context) => showSliverPrompt<void>(
+  context,
+  parentBuilder: (context, child) => TasksListProvider(
+    child: Consumer<TasksListController>(
+      builder: (context, listController, _) => SelectionLayout<Task>(
+        items: listController.items ?? const [],
+        child: child,
       ),
-      headerBuilder: (context, state) => Material(
-        color: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SheetHandle(),
-            _PromptHeader(controller: context.read<TasksController>()),
-          ],
-        ),
-      ),
-      customBuilder: (context, controller, state) => Material(
-        child: CustomScrollView(
-          controller: controller,
-          slivers: const [SliverTasksList()],
-        ),
-      ),
-    );
-
-Future<void> showTasksDialog(BuildContext context) =>
-    showDialog(context: context, builder: (context) => const TasksDialog());
-
-class TasksDialog extends StatelessWidget {
-  const TasksDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return TasksListProvider(
-      child: Consumer<TasksListController>(
-        builder: (context, listController, _) => SelectionLayout<Task>(
-          items: listController.items ?? const [],
-          child: AlertDialog(
-            titlePadding: EdgeInsets.zero,
-            contentPadding: EdgeInsets.zero,
-            title: SizedBox(
-              width: 600,
-              child: _PromptHeader(controller: context.read<TasksController>()),
-            ),
-            content: const SizedBox(width: 600, child: TasksListView()),
-          ),
-        ),
-      ),
-    );
-  }
-}
+    ),
+  ),
+  header: (context) =>
+      _PromptHeader(controller: context.read<TasksController>()),
+  sliver: const SliverTasksList(),
+);
 
 class _PromptHeader extends StatelessWidget {
   const _PromptHeader({required this.controller});

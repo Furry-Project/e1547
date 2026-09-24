@@ -12,11 +12,11 @@ class PostFullscreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return PostHistoryConnector(
       post: post,
-      child: PostFullscreenFrame(
+      child: PostVideoRoute(
         post: post,
-        child: PostVideoRoute(
+        stopOnDispose: false,
+        child: PostFullscreenFrame(
           post: post,
-          stopOnDispose: false,
           child: PostImageOverlay(
             post: post,
             builder: (context) {
@@ -66,13 +66,16 @@ class PostFullscreen extends StatelessWidget {
                     );
                   }
                 case PostType.video:
+                  VideoPlayer? player = post.getVideo(context);
                   return Center(
                     child: Hero(
                       tag: post.link,
-                      child: VideoGestures(
-                        player: post.getVideo(context)!,
-                        child: PostVideoWidget(post: post),
-                      ),
+                      child: player != null
+                          ? VideoGestures(
+                              player: player,
+                              child: PostVideoWidget(post: post),
+                            )
+                          : PostVideoWidget(post: post),
                     ),
                   );
                 case PostType.unsupported:

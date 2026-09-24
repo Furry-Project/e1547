@@ -1,4 +1,5 @@
 import 'package:e1547/post/post.dart';
+import 'package:e1547/shared/shared.dart';
 import 'package:flutter/material.dart';
 
 class RelationshipDisplay extends StatelessWidget {
@@ -7,60 +8,37 @@ class RelationshipDisplay extends StatelessWidget {
   final Post post;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      HiddenWidget(
-        show: post.relationships.parentId != null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Text('Parent', style: TextStyle(fontSize: 16)),
-            ),
-            ListTile(
-              leading: const Icon(Icons.supervisor_account),
-              title: Text(post.relationships.parentId.toString()),
-              trailing: const Icon(Icons.arrow_right),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) =>
-                      PostLoadingPage(post.relationships.parentId!),
-                ),
+  Widget build(BuildContext context) {
+    final int? parentId = post.relationships.parentId;
+    final List<int> children = (post.relationships.hasActiveChildren ?? true)
+        ? post.relationships.children
+        : const [];
+    if (parentId == null && children.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (parentId != null) ...[
+          const RelationHeader(title: 'Parent'),
+          PostRelationTile(id: parentId),
+          const Divider(),
+        ],
+        if (children.isNotEmpty) ...[
+          RelationHeader(title: 'Children', count: children.length),
+          SizedBox(
+            height: postRelationPreviewSize,
+            child: ScrollEdgeFade(
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: children.length,
+                itemBuilder: (context, index) =>
+                    PostRelationPreview(id: children[index]),
               ),
             ),
-            const Divider(),
-          ],
-        ),
-      ),
-      HiddenWidget(
-        show:
-            post.relationships.children.isNotEmpty &&
-            (post.relationships.hasActiveChildren ?? true),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Text('Children', style: TextStyle(fontSize: 16)),
-            ),
-            ...post.relationships.children.map(
-              (child) => ListTile(
-                leading: const Icon(Icons.supervised_user_circle),
-                title: Text(child.toString()),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => PostLoadingPage(child),
-                  ),
-                ),
-              ),
-            ),
-            const Divider(),
-          ],
-        ),
-      ),
-    ],
-  );
+          ),
+          const Divider(),
+        ],
+      ],
+    );
+  }
 }

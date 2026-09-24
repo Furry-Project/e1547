@@ -23,6 +23,7 @@ _Post _$PostFromJson(Map<String, dynamic> json) => _Post(
         MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
   ),
   uploaderId: (json['uploader_id'] as num).toInt(),
+  uploaderName: json['uploader_name'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: json['updated_at'] == null
       ? null
@@ -54,6 +55,7 @@ Map<String, dynamic> _$PostToJson(_Post instance) => <String, dynamic>{
   'variants': instance.variants,
   'tags': instance.tags,
   'uploader_id': instance.uploaderId,
+  'uploader_name': instance.uploaderName,
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt?.toIso8601String(),
   'score': instance.score,

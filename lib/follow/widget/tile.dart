@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:e1547/app/app.dart';
 import 'package:e1547/client/client.dart';
 import 'package:e1547/follow/follow.dart';
+import 'package:e1547/pool/pool.dart';
 import 'package:e1547/post/post.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:e1547/tag/tag.dart';
@@ -165,15 +166,23 @@ class FollowTile extends StatelessWidget {
                   child: SelectionItemOverlay<Follow>(
                     item: follow,
                     child: InkWell(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => PostsSearchPage(
-                            query: {'tags': follow.tags},
-                            orderPoolsByOldest: (follow.unseen ?? 0) == 0,
-                            readerMode: poolRegex().hasMatch(follow.tags),
+                      onTap: () {
+                        final poolId = poolRegex()
+                            .firstMatch(follow.tags)
+                            ?.namedGroup('id');
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => poolId != null
+                                ? PoolLoadingPage(
+                                    int.parse(poolId),
+                                    orderByOldest: (follow.unseen ?? 0) == 0,
+                                  )
+                                : PostsPage(
+                                    params: PostParams(tags: follow.tags),
+                                  ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),

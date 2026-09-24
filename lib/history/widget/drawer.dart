@@ -54,7 +54,7 @@ class HistoryClearTile extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                client.histories.removeAll(null);
+                client.histories.useClear().mutate();
               },
               child: const Text('Clear'),
             ),
@@ -133,39 +133,38 @@ class HistoryCategoryFilterTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HistoryController>(
-      builder: (context, controller, child) => Column(
+    return Consumer<HistoryParamsController>(
+      builder: (context, controller, _) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Padding(
             padding: EdgeInsets.only(left: 12),
-            child: ListTileHeader(title: 'Entries'),
+            child: SectionHeader(
+              indent: SectionHeader.listTileIndent,
+              title: 'Entries',
+            ),
           ),
           for (final filter in HistoryCategory.values)
-            AnimatedBuilder(
-              animation: controller,
-              builder: (context, child) {
-                HistoryQuery query = HistoryQuery.from(controller.search);
-                return Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: CheckboxListTile(
-                    secondary: filter.icon,
-                    title: Text(filter.title),
-                    value: query.categories?.contains(filter) ?? true,
-                    onChanged: (value) {
-                      if (value == null) return;
-                      Set<HistoryCategory> filters =
-                          query.categories ?? HistoryCategory.values.toSet();
-                      if (value) {
-                        filters.add(filter);
-                      } else {
-                        filters.remove(filter);
-                      }
-                      controller.search = query.copy()..categories = filters;
-                    },
-                  ),
-                );
-              },
+            Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: CheckboxListTile(
+                secondary: filter.icon,
+                title: Text(filter.title),
+                value: controller.value.categories?.contains(filter) ?? true,
+                onChanged: (value) {
+                  if (value == null) return;
+                  controller.update((p) {
+                    final filters =
+                        p.categories?.toSet() ?? HistoryCategory.values.toSet();
+                    if (value) {
+                      filters.add(filter);
+                    } else {
+                      filters.remove(filter);
+                    }
+                    return p.copyWith(categories: filters);
+                  });
+                },
+              ),
             ),
         ],
       ),
@@ -178,39 +177,38 @@ class HistoryTypeFilterTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HistoryController>(
-      builder: (context, controller, child) => Column(
+    return Consumer<HistoryParamsController>(
+      builder: (context, controller, _) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Padding(
             padding: EdgeInsets.only(left: 12),
-            child: ListTileHeader(title: 'Type'),
+            child: SectionHeader(
+              indent: SectionHeader.listTileIndent,
+              title: 'Type',
+            ),
           ),
           for (final filter in HistoryType.values)
-            AnimatedBuilder(
-              animation: controller,
-              builder: (context, child) {
-                HistoryQuery query = HistoryQuery.from(controller.search);
-                return Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: CheckboxListTile(
-                    secondary: filter.icon,
-                    title: Text(filter.title),
-                    value: query.types?.contains(filter) ?? true,
-                    onChanged: (value) {
-                      if (value == null) return;
-                      Set<HistoryType> filters =
-                          query.types ?? HistoryType.values.toSet();
-                      if (value) {
-                        filters.add(filter);
-                      } else {
-                        filters.remove(filter);
-                      }
-                      controller.search = query.copy()..types = filters;
-                    },
-                  ),
-                );
-              },
+            Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: CheckboxListTile(
+                secondary: filter.icon,
+                title: Text(filter.title),
+                value: controller.value.types?.contains(filter) ?? true,
+                onChanged: (value) {
+                  if (value == null) return;
+                  controller.update((p) {
+                    final filters =
+                        p.types?.toSet() ?? HistoryType.values.toSet();
+                    if (value) {
+                      filters.add(filter);
+                    } else {
+                      filters.remove(filter);
+                    }
+                    return p.copyWith(types: filters);
+                  });
+                },
+              ),
             ),
         ],
       ),

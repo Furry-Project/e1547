@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:drift/drift.dart';
 import 'package:e1547/app/app.dart';
 import 'package:e1547/client/client.dart';
+import 'package:e1547/files/files.dart';
 import 'package:e1547/follow/follow.dart';
 import 'package:e1547/identity/identity.dart';
 import 'package:e1547/logs/logs.dart';
@@ -44,6 +46,7 @@ Future<void> runFollowUpdates({
 
     await runClientFollowUpdate(
       client: client,
+      database: storage.sqlite,
       notifications: notifications,
       cancelToken: cancelToken,
     );
@@ -56,6 +59,7 @@ Future<void> runFollowUpdates({
 
 Future<void> runClientFollowUpdate({
   required Client client,
+  required GeneratedDatabase database,
   required FlutterLocalNotificationsPlugin notifications,
   CancelToken? cancelToken,
 }) async {
@@ -73,12 +77,22 @@ Future<void> runClientFollowUpdate({
     query: FollowsQuery(types: [FollowType.notify]),
   );
 
-  await updateFollowNotifications(
-    identity: client.identity.id,
-    previous: previous,
-    updated: updated,
-    notifications: notifications,
+  final BaseCacheManager cache = createFileCache(
+    dio: client.dio,
+    database: database,
   );
+
+  try {
+    await updateFollowNotifications(
+      identity: client.identity.id,
+      previous: previous,
+      updated: updated,
+      notifications: notifications,
+      cache: cache,
+    );
+  } finally {
+    await cache.dispose();
+  }
 }
 
 Future<void> updateFollowNotifications({
@@ -86,8 +100,9 @@ Future<void> updateFollowNotifications({
   required List<Follow> previous,
   required List<Follow> updated,
   required FlutterLocalNotificationsPlugin notifications,
+  required BaseCacheManager cache,
 }) async {
-  final Logger logger = Logger('Notifications');
+  final Logger logger = Logger('FollowNotifications', {'identity': identity});
 
   Map<Follow, int> updates = {};
   List<Follow> seen = [];
@@ -108,10 +123,22 @@ Future<void> updateFollowNotifications({
     String? thumbnail = follow.thumbnail;
     String? picture;
     if (thumbnail != null) {
-      picture = (await DefaultCacheManager().getSingleFile(thumbnail)).path;
+      try {
+        picture = (await cache.getSingleFile(thumbnail)).path;
+      } on Exception catch (e, s) {
+        logger.warn(
+          'Failed to load thumbnail for {tags}',
+          {'tags': follow.tags},
+          e,
+          s,
+        );
+      }
     }
 
-    logger.fine('${follow.tags} has $unseen new posts!');
+    logger.debug('{tags} has {unseen} new posts', {
+      'tags': follow.tags,
+      'unseen': unseen,
+    });
 
     NotificationDetails notificationDetails = _createNotificationDetails(
       thumbnailPath: picture,
@@ -163,7 +190,10 @@ Future<void> updateFollowNotifications({
       }
     }
 
-    logger.info('Sent notification, title: $title\nbody: $description');
+    logger.info('Notified: {title} {body}', {
+      'title': title,
+      'body': description,
+    });
   }
 
   for (final follow in seen) {

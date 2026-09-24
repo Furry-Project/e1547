@@ -13,10 +13,7 @@ class TagDisplay extends StatelessWidget {
       return Wrap(
         children: [
           ...post.tags[category]!.map(
-            (tag) => TagCard(
-              tag: tag,
-              category: category,
-            ),
+            (tag) => TagCard(tag: tag, category: category),
           ),
         ],
       );

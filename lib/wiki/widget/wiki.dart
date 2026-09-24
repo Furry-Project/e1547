@@ -18,7 +18,7 @@ class WikiPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'Info',
-            onPressed: () => wikiPrompt(context, wiki),
+            onPressed: () => showWikiPrompt(context: context, wiki: wiki),
           ),
         ],
       ),

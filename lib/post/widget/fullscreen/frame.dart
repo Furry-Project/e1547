@@ -105,7 +105,12 @@ class _SuppressBubbleWhileFrameHiddenState
 
   @override
   void dispose() {
-    _tasks?.suppressBubble.value = false;
+    final TasksController? tasks = _tasks;
+    if (tasks != null && tasks.suppressBubble.value) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => tasks.suppressBubble.value = false,
+      );
+    }
     super.dispose();
   }
 
@@ -114,7 +119,11 @@ class _SuppressBubbleWhileFrameHiddenState
     final ScaffoldFrameController frame = ScaffoldFrame.of(context);
     return SubListener(
       listenable: frame,
-      listener: () => _tasks?.suppressBubble.value = !frame.visible,
+      listener: () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _tasks?.suppressBubble.value = !frame.visible;
+        });
+      },
       builder: (context) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _tasks?.suppressBubble.value = !frame.visible;

@@ -6,6 +6,8 @@ import 'package:e1547/shared/shared.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+final DTextGrammar _grammar = DTextGrammar();
+
 class DText extends StatefulWidget {
   const DText(
     this.value, {
@@ -35,10 +37,10 @@ class _DTextState extends State<DText> {
 
   void _runParse() {
     try {
-      _content = DTextGrammar().parse(widget.value);
+      _content = _grammar.parse(widget.value);
       _error = null;
     } on Object catch (e, s) {
-      _logger.severe('Failed to parse DText', e, s);
+      _logger.error('Failed to parse DText', null, e, s);
       _error = e;
     }
   }
@@ -116,9 +118,30 @@ class DTextBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTextStyle.merge(
       style: style,
-      child: Expandables(child: _renderNode(context, content)),
+      child: Expandables(
+        child: Builder(
+          builder: (context) {
+            final Widget child = Builder(
+              builder: (context) => _renderNode(context, content),
+            );
+            // Nested bodies share the outermost registry, so an anchor in a
+            // quote and a link outside it still find each other.
+            if (DTextAnchors.of(context) != null) return child;
+            return DTextAnchors(child: child);
+          },
+        ),
+      ),
     );
   }
+
+  DTextBody _nested(List<DTextBlock> children) => DTextBody(
+    content: DTextDocument(children),
+    style: style,
+    maxLines: maxLines,
+    overflow: overflow,
+    textAlign: textAlign,
+    softWrap: softWrap,
+  );
 
   Widget _renderNode(BuildContext context, DTextNode node) {
     return switch (node) {
@@ -135,6 +158,19 @@ class DTextBody extends StatelessWidget {
       DTextTableCell() ||
       DTextTableChild() => const SizedBox.shrink(),
     };
+  }
+
+  /// Drops the line break a verbatim block ends on. The parser keeps it
+  /// because e621ng does, where a browser draws no line for it inside a
+  /// `<pre>`.
+  String _withoutClosingBreak(String content) {
+    if (content.endsWith('\r\n')) {
+      return content.substring(0, content.length - 2);
+    }
+    if (content.endsWith('\n')) {
+      return content.substring(0, content.length - 1);
+    }
+    return content;
   }
 
   Widget _renderBlocks(BuildContext context, List<DTextBlock> blocks) {
@@ -176,26 +212,25 @@ class DTextBody extends StatelessWidget {
         textAlign: textAlign,
         softWrap: softWrap,
       ),
-      DTextQuote() => QuoteWrap(
-        child: DTextBody(content: DTextDocument(block.children), style: style),
-      ),
-      DTextSpoilerBlock() => SpoilerBlockWrap(
-        child: DTextBody(content: DTextDocument(block.children), style: style),
-      ),
+      DTextQuote() => QuoteWrap(child: _nested(block.children)),
+      DTextSpoilerBlock() => SpoilerBlockWrap(child: _nested(block.children)),
       DTextSection() => SectionWrap(
         key: ObjectKey(block),
         title: block.title,
         expanded: block.expanded ?? false,
-        child: DTextBody(content: DTextDocument(block.children), style: style),
+        child: _nested(block.children),
       ),
       DTextCodeBlock() => CodeWrap(
-        child: SelectableText(block.content, textAlign: textAlign),
+        child: SelectableText(
+          _withoutClosingBreak(block.content),
+          textAlign: textAlign,
+        ),
       ),
       DTextTable() => DTextTableWidget(children: block.children),
       DTextLTable() => DTextTableWidget(children: block.children),
       DTextList() => _renderList(context, block),
       DTextRawBlockText() => SelectableText(
-        block.content,
+        _withoutClosingBreak(block.content),
         textAlign: textAlign,
       ),
       DTextLiteralHtml() => Text.rich(
@@ -284,7 +319,10 @@ class DTextBody extends StatelessWidget {
       ),
       DTextInternalAnchor() => WidgetSpan(
         alignment: PlaceholderAlignment.middle,
-        child: SizedBox.shrink(key: GlobalObjectKey(node)),
+        child: DTextAnchorTarget(
+          key: GlobalObjectKey(node),
+          name: normalizeAnchor(node.name),
+        ),
       ),
       DTextLink() => _buildLinkSpan(context, node),
     };
@@ -337,6 +375,10 @@ class DTextBody extends StatelessWidget {
   }) {
     final href = node.href;
     if (!local) return () => launch(href);
+    if (href.startsWith('#')) {
+      final anchor = node.anchor ?? href.substring(1);
+      return () => DTextAnchors.of(context)?.reveal(normalizeAnchor(anchor));
+    }
     final action = const E621LinkParser().parseOnTap(context, href);
     if (action != null) return action;
     return () => launch(context.read<Client>().withHost(href));

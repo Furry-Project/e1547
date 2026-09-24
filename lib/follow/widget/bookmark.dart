@@ -1,6 +1,7 @@
 import 'package:e1547/client/client.dart';
 import 'package:e1547/follow/follow.dart';
 import 'package:e1547/post/post.dart';
+import 'package:e1547/query/query.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sub/flutter_sub.dart';
@@ -11,28 +12,27 @@ class FollowsBookmarkPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RouterDrawerEntry<FollowsBookmarkPage>(
-      child: SubChangeNotifierProvider<Client, FollowController>(
-        create: (context, client) =>
-            FollowController(client: client, types: [FollowType.bookmark]),
-        child: Consumer<FollowController>(
-          builder: (context, controller, child) => SubEffect(
-            effect: () {
-              // remove this when the paged grid view is implemented
-              controller.getNextPage();
-              final client = context.read<Client>();
-              client.followServer.sync();
-              return null;
-            },
-            keys: const [],
-            child: SelectionLayout<Follow>(
-              items: controller.items,
+      child: ChangeNotifierProvider(
+        create: (_) => FollowParamsController(
+          const FollowParams(types: [FollowType.bookmark]),
+        ),
+        child: SubEffect(
+          effect: () {
+            final client = context.read<Client>();
+            client.followServer.sync();
+            return null;
+          },
+          keys: const [],
+          child: FollowPageQueryBuilder(
+            builder: (context, state, query) => SelectionLayout<Follow>(
+              items: state.data?.pages.expand((p) => p).toList(),
               child: PromptActions(
                 child: AdaptiveScaffold(
                   appBar: const FollowSelectionAppBar(
                     child: DefaultAppBar(title: Text('Bookmarks')),
                   ),
                   drawer: const RouterDrawer(),
-                  floatingActionButton: AddTagFloatingActionButton(
+                  floatingActionButton: AddTagFab(
                     title: 'Add to bookmarks',
                     onSubmit: (value) async {
                       value = value.trim();
@@ -44,19 +44,17 @@ class FollowsBookmarkPage extends StatelessWidget {
                     },
                   ),
                   body: TileLayout(
-                    child: ListenableBuilder(
-                      listenable: controller,
-                      builder: (context, _) => PullToRefresh(
-                        onRefresh: () =>
-                            controller.refresh(force: true, background: true),
+                    child: Builder(
+                      builder: (context) => PullToRefresh(
+                        onRefresh: query.invalidate,
                         child: PagedAlignedGridView<int, Follow>.count(
                           primary: true,
                           padding: defaultActionListPadding,
                           addAutomaticKeepAlives: false,
-                          state: controller.state,
-                          fetchNextPage: controller.getNextPage,
+                          state: state.paging,
+                          fetchNextPage: query.getNextPage,
                           builderDelegate: defaultPagedChildBuilderDelegate(
-                            onRetry: controller.getNextPage,
+                            onRetry: query.getNextPage,
                             itemBuilder: (context, item, index) =>
                                 FollowTile(follow: item),
                             onEmpty: const Text('No bookmarks'),

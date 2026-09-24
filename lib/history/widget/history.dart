@@ -1,18 +1,19 @@
-import 'package:e1547/client/client.dart';
 import 'package:e1547/history/history.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:flutter/material.dart';
 
 class HistoriesPage extends StatelessWidget {
-  const HistoriesPage({super.key});
+  const HistoriesPage({super.key, this.query});
+
+  final QueryMap? query;
 
   @override
-  Widget build(BuildContext context) {
-    return SubChangeNotifierProvider<Client, HistoryController>(
-      create: (context, client) => HistoryController(client: client),
-      child: Consumer<HistoryController>(
-        builder: (context, controller, child) => SelectionLayout<History>(
-          items: controller.items,
+  Widget build(BuildContext context) => RouterDrawerEntry<HistoriesPage>(
+    child: ChangeNotifierProvider(
+      create: (_) => HistoryParamsController(HistoryParams.fromQuery(query)),
+      child: HistoryPageQueryBuilder(
+        builder: (context, state, query) => SelectionLayout<History>(
+          items: state.data?.pages.expand((p) => p).toList(),
           child: const AdaptiveScaffold(
             appBar: HistoryAppBar(),
             floatingActionButton: HistorySearchFab(),
@@ -32,6 +33,6 @@ class HistoriesPage extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

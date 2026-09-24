@@ -9,9 +9,17 @@ class ColoredCard extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.onSecondaryTap,
-    this.leading,
     this.trailing,
+    this.padding = const EdgeInsets.only(
+      top: 4,
+      bottom: 4,
+      right: 10,
+      left: stripeWidth + 6,
+    ),
   });
+
+  /// The content has to clear this width.
+  static const double stripeWidth = 5;
 
   final Widget child;
   final Color? backgroundColor;
@@ -19,8 +27,11 @@ class ColoredCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final VoidCallback? onSecondaryTap;
-  final Widget? leading;
   final Widget? trailing;
+  final EdgeInsetsGeometry padding;
+
+  bool get _interactive =>
+      onTap != null || onLongPress != null || onSecondaryTap != null;
 
   @override
   State<ColoredCard> createState() => _ColoredCardState();
@@ -60,9 +71,48 @@ class _ColoredCardState extends State<ColoredCard> {
       brightness == Brightness.dark ? Colors.white : Colors.black,
       0.1,
     )!;
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: GestureDetector(
+
+    Widget body = DecoratedBox(
+      decoration: BoxDecoration(
+        color: _pressed ? pressedColor : baseColor,
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
+      ),
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Padding(padding: widget.padding, child: widget.child),
+              ),
+              if (widget.trailing case final trailing?) trailing,
+            ],
+          ),
+          // Stacking gives the stripe the content's height rather than a
+          // fixed one.
+          if (widget.color case final stripeColor?)
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              width: ColoredCard.stripeWidth,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: stripeColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(4),
+                    bottomLeft: Radius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    if (widget._interactive) {
+      body = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         onTapDown: (_) => _press(),
@@ -74,90 +124,10 @@ class _ColoredCardState extends State<ColoredCard> {
         onSecondaryTap: widget.onSecondaryTap,
         onSecondaryTapDown: (_) => _press(),
         onSecondaryTapCancel: () => setState(() => _pressed = false),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: _pressed ? pressedColor : baseColor,
-            borderRadius: const BorderRadius.all(Radius.circular(4)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.color case final stripeColor?)
-                Container(
-                  height: 27,
-                  decoration: BoxDecoration(
-                    color: stripeColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      bottomLeft: Radius.circular(4),
-                    ),
-                  ),
-                  child: widget.leading ?? const SizedBox(width: 5),
-                ),
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: 4,
-                    bottom: 4,
-                    right: 10,
-                    left: 6,
-                  ),
-                  child: widget.child,
-                ),
-              ),
-              if (widget.trailing case final trailing?) trailing,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+        child: body,
+      );
+    }
 
-class IndentedCard extends StatelessWidget {
-  const IndentedCard({
-    super.key,
-    required this.child,
-    this.backgroundColor,
-    this.color,
-  });
-
-  final Widget child;
-  final Color? backgroundColor;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: backgroundColor ?? Theme.of(context).cardColor,
-          borderRadius: const BorderRadius.all(Radius.circular(4)),
-        ),
-        child: Stack(
-          fit: StackFit.passthrough,
-          children: [
-            Padding(padding: const EdgeInsets.only(left: 5), child: child),
-            if (color != null)
-              Positioned(
-                top: 0,
-                bottom: 0,
-                left: 0,
-                child: Container(
-                  width: 5,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      bottomLeft: Radius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
+    return Padding(padding: const EdgeInsets.all(2), child: body);
   }
 }

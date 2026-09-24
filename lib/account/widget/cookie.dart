@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:e1547/client/client.dart';
 import 'package:e1547/identity/identity.dart';
+import 'package:e1547/logs/logs.dart';
 import 'package:e1547/settings/settings.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,10 @@ class CookieCapturePage extends StatefulWidget {
 }
 
 class _CookieCapturePageState extends State<CookieCapturePage> {
+  late final Logger logger = Logger('CookieCapture', {
+    'host': context.read<Client>().host,
+  });
+
   late final WebViewController controller = WebViewController()
     ..setUserAgent(AppInfo.instance.userAgent)
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -67,12 +72,46 @@ class _CookieCapturePageState extends State<CookieCapturePage> {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.check),
         onPressed: () async {
-          setCookies(context);
-          Navigator.of(context).maybePop();
+          NavigatorState navigator = Navigator.of(context);
+          try {
+            await setCookies(context);
+          } on Exception catch (e, stacktrace) {
+            logger.error('Failed to capture cookies', null, e, stacktrace);
+          }
+          await navigator.maybePop();
         },
       ),
     );
   }
+}
+
+/// Discards stored Cloudflare cookies once the host has rejected them.
+Future<void> dropCloudflareCookies(IdentityClient client) async {
+  Map<String, String>? headers = withoutCloudflareCookies(
+    client.identity.headers,
+  );
+  if (headers == null) return;
+  await client.replace(client.identity.copyWith(headers: headers));
+}
+
+/// Strips Cloudflare cookies from [headers], or null when nothing changes.
+Map<String, String>? withoutCloudflareCookies(Map<String, String>? headers) {
+  String? existing = headers?[HttpHeaders.cookieHeader];
+  if (existing == null) return null;
+
+  List<String> pairs = existing.split('; ');
+  List<String> kept = pairs
+      .where((pair) => !isCloudflareCookie(pair.split('=').first))
+      .toList();
+  if (kept.length == pairs.length) return null;
+
+  Map<String, String> result = Map.of(headers!);
+  if (kept.isEmpty) {
+    result.remove(HttpHeaders.cookieHeader);
+  } else {
+    result[HttpHeaders.cookieHeader] = kept.join('; ');
+  }
+  return result;
 }
 
 bool isCloudflareCookie(String name) {

@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [21.0.1+103] - 2026-09-02
+### Fixed
+- Videos playing on after swiping away from them
+- Follows staying unread after visiting them
+- System bars showing and hiding
+
+## [21.0.0+102] - 2026-08-31
+### Added
+- Previews for parent, child and pool posts
+- Posting and reporting forum replies
+- Windows and Linux releases
+- Links to headings in wiki and forum pages
+
+### Fixed
+- Clearing history
+- Missing bookmark and follow thumbnails
+- Rewinding a video jumping to its end
+- Wide tables overflowing wiki and forum pages
+- Blacklist differing from the site
+- Reporting posts
+
 ## [20.5.0+101] - 2026-07-06
 ### Added
 - Onboarding flow
@@ -951,6 +972,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 - API client bindings
 
+[21.0.1+103]: https://github.com/clragon/e1547/compare/21.0.0+102...21.0.1+103
+[21.0.0+102]: https://github.com/clragon/e1547/compare/20.5.0+101...21.0.0+102
 [20.5.0+101]: https://github.com/clragon/e1547/compare/20.4.0+100...20.5.0+101
 [20.4.0+100]: https://github.com/clragon/e1547/compare/20.3.0+99...20.4.0+100
 [20.3.0+99]: https://github.com/clragon/e1547/compare/20.2.0+98...20.3.0+99

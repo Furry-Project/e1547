@@ -103,7 +103,8 @@ class _HostFormFieldState extends State<HostFormField> {
               key: tooltipKey,
               triggerMode: TooltipTriggerMode.manual,
               verticalOffset: 44,
-              message: 'Site can\'t be changed. '
+              message:
+                  'Site can\'t be changed. '
                   'Add a new account to use a different one.',
               child: field,
             )

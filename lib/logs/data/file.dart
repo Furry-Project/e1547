@@ -4,6 +4,8 @@ import 'package:path/path.dart';
 
 final DateFormat logFileDateFormat = DateFormat('yyyy-MM-dd-HH-mm-ss-SSS');
 
+const String logFileExtension = '.jsonl';
+
 class LogFileInfo {
   LogFileInfo({required this.path, required this.date, required this.type});
 

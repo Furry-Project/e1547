@@ -20,6 +20,10 @@ enum NumberComparison {
 ///  - `>value` - A number greater than the given value.
 ///  - `>=value` - A number greater than or equal to the given value.
 ///  - `value..endValue` - A range of numbers between the given values.
+///  - `..endValue` - A number up to and including the given value.
+///  - `value..` - A number from the given value upwards.
+///
+/// Comparison operators may also be written in reverse, as `=<` and `=>`.
 class NumberRange {
   const NumberRange(this.value, {this.endValue, this.comparison})
     : assert(
@@ -36,7 +40,9 @@ class NumberRange {
   final int? endValue;
 
   static RegExp pattern = RegExp(
-    r'^(?<operator>[><]=?)?\s*(?<value>\d+)(?:\.\.(?<endValue>\d+))?$',
+    r'^(?:(?<operator>[><]=?|=[><])\s*(?<single>-?\d+)'
+    r'|(?<start>-?\d+)?\.\.(?<end>-?\d+)?'
+    r'|(?<exact>-?\d+))$',
   );
 
   @override
@@ -61,7 +67,7 @@ class NumberRange {
   /// Returns true if the given number satisfies the range.
   bool has(num num) {
     if (endValue != null) {
-      return num > value && num < endValue!;
+      return num >= value && num <= endValue!;
     }
 
     switch (comparison) {
@@ -90,25 +96,19 @@ class NumberRange {
   /// Creates a NumberRange from a string.
   static NumberRange parse(String input) {
     final match = pattern.firstMatch(input);
+    if (match == null) {
+      throw FormatException('Invalid NumberRange format', input);
+    }
 
-    if (match != null) {
-      final operator = match.namedGroup('operator');
-      final value = int.parse(match.namedGroup('value')!);
+    final exact = match.namedGroup('exact');
+    if (exact != null) return NumberRange(int.parse(exact));
 
-      final endValueStr = match.namedGroup('endValue');
-      if (endValueStr != null) {
-        final endValue = int.parse(endValueStr);
-        if (endValue < value) {
-          throw FormatException(
-            'End value cannot be less than start value',
-            input,
-          );
-        }
-        return NumberRange(value, endValue: endValue);
-      }
-
+    final operator = match.namedGroup('operator');
+    if (operator != null) {
+      final value = int.parse(match.namedGroup('single')!);
       switch (operator) {
         case '<=':
+        case '=<':
           return NumberRange(
             value,
             comparison: NumberComparison.lessThanOrEqual,
@@ -116,18 +116,43 @@ class NumberRange {
         case '<':
           return NumberRange(value, comparison: NumberComparison.lessThan);
         case '>=':
+        case '=>':
           return NumberRange(
             value,
             comparison: NumberComparison.greaterThanOrEqual,
           );
         case '>':
           return NumberRange(value, comparison: NumberComparison.greaterThan);
-        default:
-          return NumberRange(value);
       }
-    } else {
-      throw FormatException('Invalid NumberRange format', input);
     }
+
+    final start = match.namedGroup('start');
+    final end = match.namedGroup('end');
+    if (start != null && end != null) {
+      final value = int.parse(start);
+      final endValue = int.parse(end);
+      if (endValue < value) {
+        throw FormatException(
+          'End value cannot be less than start value',
+          input,
+        );
+      }
+      return NumberRange(value, endValue: endValue);
+    }
+    if (start != null) {
+      return NumberRange(
+        int.parse(start),
+        comparison: NumberComparison.greaterThanOrEqual,
+      );
+    }
+    if (end != null) {
+      return NumberRange(
+        int.parse(end),
+        comparison: NumberComparison.lessThanOrEqual,
+      );
+    }
+
+    throw FormatException('Invalid NumberRange format', input);
   }
 
   /// Creates a NumberRange from a string, or returns null if the string is invalid.

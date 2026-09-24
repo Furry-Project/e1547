@@ -1,5 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:e1547/client/client.dart';
 import 'package:e1547/post/post.dart';
+import 'package:e1547/query/query.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:e1547/traits/data/client.dart';
 import 'package:flutter/material.dart';
@@ -27,16 +29,16 @@ class IdentityAvatar extends StatelessWidget {
 class UserAvatar extends StatelessWidget {
   const UserAvatar({
     super.key,
-    required this.controller,
     required this.id,
     required this.userId,
     required this.hasCroppedAvatar,
+    this.radius = 20,
   });
 
-  final PostController? controller;
   final int? id;
   final int userId;
   final bool hasCroppedAvatar;
+  final double radius;
 
   String? _resolve(Post? post) {
     if (post == null) return null;
@@ -56,36 +58,27 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int? id = this.id;
-    PostController? controller = this.controller;
-    if (id == null || controller == null) {
-      return const EmptyAvatar();
+    final id = this.id;
+    if (id == null) {
+      return EmptyAvatar(radius: radius);
     }
-    return SubFuture<PostController>(
-      create: () => Future<PostController>(() async {
-        await controller.getNextPage();
-        return controller;
-      }),
-      keys: [controller],
-      builder: (context, _) => PostsControllerConnector(
-        id: id,
-        controller: controller,
-        builder: (context, post) => Avatar(
+    final client = context.watch<Client>();
+    return QueryBuilder(
+      query: client.posts.useGet(id: id),
+      builder: (context, state) {
+        final post = state.data;
+        return Avatar(
           _resolve(post),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => PostsControllerConnector(
-                id: id,
-                controller: controller,
-                builder: (context, post) => PostsRouteConnector(
-                  controller: controller,
-                  child: PostDetail(post: post!),
+          radius: radius,
+          onTap: post == null
+              ? null
+              : () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PostDetail(post: post),
+                  ),
                 ),
-              ),
-            ),
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -106,19 +99,12 @@ class PostAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (id == null) {
       return const EmptyAvatar();
-    } else {
-      return SinglePostProvider(
-        id: id!,
-        child: Consumer<PostController>(
-          builder: (context, controller, child) => UserAvatar(
-            id: id,
-            controller: controller,
-            userId: userId,
-            hasCroppedAvatar: hasCroppedAvatar,
-          ),
-        ),
-      );
     }
+    return UserAvatar(
+      id: id,
+      userId: userId,
+      hasCroppedAvatar: hasCroppedAvatar,
+    );
   }
 }
 

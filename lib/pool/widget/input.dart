@@ -2,23 +2,22 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:e1547/app/app.dart';
 import 'package:e1547/client/client.dart';
 import 'package:e1547/history/history.dart';
-import 'package:e1547/pool/data/controller.dart';
+import 'package:e1547/pool/pool.dart';
 import 'package:e1547/post/post.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:e1547/tag/tag.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
-class PoolsPageFloatingActionButton extends StatelessWidget {
-  const PoolsPageFloatingActionButton({super.key, required this.controller});
-
-  final PoolController controller;
+class PoolsPageFab extends StatelessWidget {
+  const PoolsPageFab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SearchPromptFloatingActionButton(
-      tags: controller.query,
-      onSubmit: (value) => controller.query = value,
+    final controller = context.watch<PoolParamsController>();
+    return SearchPromptFab(
+      tags: controller.value.toQuery(),
+      onSubmit: (value) => controller.value = PoolParams.fromQuery(value),
       filters: [
         WrapperFilterConfig(
           wrapper: (value) => 'search[$value]',
@@ -133,14 +132,11 @@ class PoolNameFilter extends StatelessWidget {
               final client = context.read<Client>();
               return (await client.histories.page(
                     page: 1,
-                    query: HistoryQuery(
+                    query: HistoryParams(
                       date: DateTime.now(),
                       link: r'/pools/.*',
-                      title:
-                          r'.*' +
-                          RegExp.escape(value.replaceAll(' ', '_')) +
-                          r'.*',
-                    ),
+                      title: RegExp.escape(value.replaceAll(' ', '_')),
+                    ).toQuery(),
                     limit: 4,
                   ))
                   .where((e) => e.title != null)

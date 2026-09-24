@@ -15,23 +15,26 @@ class PostImageOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    PostController? controller = context.read<PostController?>();
-
-    Widget centerText(String text) {
-      return Center(child: Text(text, textAlign: TextAlign.center));
-    }
-
-    if (post.isDeleted) {
-      return centerText('Post was deleted');
-    }
     if (post.file == null) {
+      if (post.isDeleted) {
+        return const IconMessage(
+          title: Text('Post was deleted'),
+          icon: Icon(Icons.delete_outlined),
+        );
+      }
+
       return const IconMessage(
-        title: Text('Image is unavailable'),
-        icon: Icon(Icons.image_not_supported_outlined),
+        title: Text('Post is unavailable'),
+        icon: Icon(Icons.no_adult_content),
       );
     }
-    if ((controller?.isDenied(post) ?? false) && !post.isFavorited) {
-      return centerText('Post is blacklisted');
+
+    PostFilter? filter = context.watch<PostFilter?>();
+    if ((filter?.denies(post) ?? false) && !post.isFavorited) {
+      return const IconMessage(
+        title: Text('Post is blacklisted'),
+        icon: Icon(Icons.block),
+      );
     }
 
     if (post.type == PostType.unsupported) {

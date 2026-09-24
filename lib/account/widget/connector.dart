@@ -21,7 +21,7 @@ class AccountConnector extends StatelessWidget {
       navigatorKey: navigatorKey,
       child: SubEffect(
         effect: () {
-          client.accounts.pull(force: true);
+          client.accounts.pull();
           return null;
         },
         keys: [client],

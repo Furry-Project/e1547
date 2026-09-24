@@ -1,3 +1,4 @@
+import 'package:e1547/client/client.dart';
 import 'package:e1547/post/post.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:flutter/material.dart';
@@ -80,25 +81,30 @@ class _PostEditPageState extends State<PostEditPage> {
             : null,
       );
 
-      final body = editData.toForm();
-      if (body != null) {
-        await context.read<PostController>().updatePost(widget.post, body);
-
-        if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(content: Text('Updated post #${widget.post.id}')),
-          );
-          Navigator.of(context).pop();
-        }
-      } else {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+      if (editData.toForm() == null) {
+        if (mounted) Navigator.of(context).pop();
+        return;
       }
-    } on ClientException {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Failed to update post #${widget.post.id}')),
-      );
+
+      final state = await context
+          .read<Client>()
+          .posts
+          .useUpdate(id: widget.post.id)
+          .mutate(editData);
+
+      if (state.isError) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('Failed to update post #${widget.post.id}')),
+        );
+        return;
+      }
+
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('Updated post #${widget.post.id}')),
+        );
+        Navigator.of(context).pop();
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

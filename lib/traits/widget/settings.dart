@@ -51,7 +51,7 @@ class DenyListPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                floatingActionButton: PromptFloatingActionButton(
+                floatingActionButton: PromptFab(
                   builder: (context) => buildEditTextField(
                     context,
                     title: 'Add tag',
@@ -75,7 +75,7 @@ class DenyListPage extends StatelessWidget {
                 ),
                 body: PullToRefresh(
                   onRefresh: () async {
-                    await client.accounts.pull(force: true);
+                    await client.accounts.pull();
                   },
                   child: denylist.isEmpty
                       ? const Center(
@@ -106,7 +106,8 @@ class DenyListPage extends StatelessWidget {
                                       if (value.isEmpty) {
                                         await client.accounts.push(
                                           traits: traits.copyWith(
-                                            denylist: List.of(denylist)..remove(tag),
+                                            denylist: List.of(denylist)
+                                              ..remove(tag),
                                           ),
                                         );
                                       } else {

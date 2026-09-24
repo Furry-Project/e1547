@@ -29,7 +29,7 @@ class TasksController extends ChangeNotifier {
   final Settings settings;
   final int identity;
 
-  final Logger _logger = Logger('TasksController');
+  late final Logger _logger = Logger('TasksController', {'identity': identity});
 
   List<Task> _active = const [];
   List<Task> get active => _active;
@@ -147,7 +147,7 @@ class TasksController extends ChangeNotifier {
         }
       }
     } on Object catch (e, s) {
-      _logger.warning('Task sweep failed', e, s);
+      _logger.warn('Task sweep failed', null, e, s);
     }
   }
 
@@ -229,7 +229,12 @@ class TasksController extends ChangeNotifier {
         await repository.markCompleted(task.id);
       }
     } on Object catch (e, s) {
-      _logger.warning('Task ${task.id} (${task.action}) failed', e, s);
+      _logger.warn(
+        'Task {task} ({action}) failed',
+        {'task': task.id, 'action': task.action.name},
+        e,
+        s,
+      );
       final TaskStatus? current = await repository.readStatus(task.id);
       if (current == TaskStatus.running) {
         await repository.markFailed(task.id, e.toString());
@@ -251,11 +256,16 @@ class TasksController extends ChangeNotifier {
         await client.posts.addFavorite(task.postId);
         if (settings.upvoteFavs.value) {
           try {
-            await client.posts.vote(task.postId, true, true);
+            await client.posts.vote(
+              id: task.postId,
+              upvote: true,
+              replace: true,
+            );
           } on Object catch (e, s) {
             // upvote is best-effort once the favorite succeeded
-            _logger.warning(
-              'Upvote after favorite failed for post #${task.postId}',
+            _logger.warn(
+              'Upvote after favorite failed for post {post}',
+              {'post': task.postId},
               e,
               s,
             );

@@ -2,13 +2,19 @@ require 'fileutils'
 require 'yaml'
 
 add_extra_platforms(
-  platforms: [:windows]
+  platforms: [:windows, :linux]
 )
 
 default_platform(:android)
 
 def fetch_current_version
     YAML.safe_load(File.read('../pubspec.yaml'))['version']
+end
+
+def fetch_destdir
+  destdir = ENV['DESTDIR'].to_s
+  UI.user_error!("DESTDIR must point at a staging directory") if destdir.empty?
+  File.expand_path(destdir)
 end
 
 def fetch_versions
@@ -123,4 +129,45 @@ platform :windows do
         sh("fastforge package --platform=windows --targets=exe --skip-clean")
       end
     end
+end
+
+platform :linux do
+  desc "Ensures flutter is installed"
+  lane :bootstrap do
+    flutter_bootstrap(flutter_channel: 'stable')
+  end
+
+  desc "Builds the linux bundle"
+  lane :build do
+    sh("DESTDIR='' flutter build linux --release")
+  end
+
+  desc "Installs the linux bundle"
+  lane :install do
+    Dir.chdir("../") do
+      destdir = fetch_destdir
+      FileUtils.mkdir_p("#{destdir}/opt/e1547")
+      FileUtils.mkdir_p("#{destdir}/usr/bin")
+
+      FileUtils.cp_r(Dir.glob("build/linux/x64/release/bundle/*"), "#{destdir}/opt/e1547")
+      FileUtils.chmod(0755, "#{destdir}/opt/e1547/e1547")
+      FileUtils.ln_sf("/opt/e1547/e1547", "#{destdir}/usr/bin/e1547")
+      sh("install -Dm644 linux/packaging/e1547.png '#{destdir}/usr/share/icons/hicolor/256x256/apps/e1547.png'")
+      sh("install -Dm644 linux/packaging/net.e1547.desktop '#{destdir}/usr/share/applications/net.e1547.desktop'")
+    end
+  end
+
+  desc "Packages the staging root into a deb"
+  lane :pkgdeb do
+    version = fetch_current_version
+    Dir.chdir("../") do
+      destdir = fetch_destdir
+      FileUtils.mkdir_p("#{destdir}/DEBIAN")
+      control = File.read("linux/packaging/debian-control").gsub("APPVER", version)
+      File.write("#{destdir}/DEBIAN/control", control)
+
+      FileUtils.mkdir_p("dist/linux")
+      sh("dpkg-deb --root-owner-group --build '#{destdir}' 'dist/linux/e1547-#{version}.deb'")
+    end
+  end
 end

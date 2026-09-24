@@ -1,5 +1,6 @@
 import 'package:e1547/client/client.dart';
 import 'package:e1547/follow/follow.dart';
+import 'package:e1547/query/query.dart';
 import 'package:e1547/settings/settings.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +14,13 @@ class FollowMarkReadTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FollowController>(
-      builder: (context, controller, child) {
+    final client = context.watch<Client>();
+    final controller = context.watch<FollowParamsController>();
+    return QueryBuilder(
+      query: client.follows.useAll(query: controller.value.toQuery()),
+      builder: (context, state) {
         int unseenCount =
-            controller.items?.fold<int>(0, (a, b) => a + (b.unseen ?? 0)) ?? 0;
+            state.data?.fold<int>(0, (a, b) => a + (b.unseen ?? 0)) ?? 0;
         return ListTile(
           enabled: unseenCount > 0,
           leading: Icon(unseenCount > 0 ? Icons.mark_email_read : Icons.drafts),
@@ -32,7 +36,7 @@ class FollowMarkReadTile extends StatelessWidget {
               : const Text('no unseen posts'),
           onTap: () {
             Scaffold.of(context).closeEndDrawer();
-            context.read<Client>().follows.markAllSeen(null);
+            client.follows.markAllSeen(null);
             onTap?.call();
           },
         );

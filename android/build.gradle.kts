@@ -9,8 +9,9 @@ allprojects {
             // Replaces Play dependant cronet with embdedded.
             // See: https://pub.dev/packages/cronet_http#use-embedded-cronet
             // This is a work-around for using dart-define.
+            // Keep the version in sync with cronet_http's android/build.gradle
             substitute(module("com.google.android.gms:play-services-cronet"))
-                .using(module("org.chromium.net:cronet-embedded:119.6045.31"))
+                .using(module("org.chromium.net:cronet-embedded:143.7445.0"))
         }
     }
 }

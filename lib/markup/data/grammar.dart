@@ -1699,7 +1699,7 @@ class _TextRunParser extends Parser<DTextInline> {
       // e621ng/dtext's text scanner also stops at any ASCII alpha that
       // opens an id-link prefix and where the id-link pattern actually
       // matches at this position. The bitmap check is the cheap filter;
-      // the regex peek (which carries the `\b` boundary) is the commit
+      // the regex peek (which has the `\b` boundary) is the commit
       // gate.
       if (c < 128 &&
           DTextGrammar._idLinkStartCodes[c] &&

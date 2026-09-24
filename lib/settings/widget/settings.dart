@@ -27,7 +27,10 @@ class SettingsPage extends StatelessWidget {
               LimitedWidthLayout.of(context).padding,
             ),
             children: [
-              const ListTileHeader(title: 'Account'),
+              const SectionHeader(
+                indent: SectionHeader.listTileIndent,
+                title: 'Account',
+              ),
               Consumer<IdentityClient>(
                 builder: (context, client, child) => IdentityTile(
                   identity: client.identity,
@@ -41,7 +44,10 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              const ListTileHeader(title: 'User'),
+              const SectionHeader(
+                indent: SectionHeader.listTileIndent,
+                title: 'User',
+              ),
               Consumer<Client>(
                 builder: (context, client, child) => ValueListenableBuilder(
                   valueListenable: client.traits,
@@ -111,7 +117,10 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              const ListTileHeader(title: 'Appearance'),
+              const SectionHeader(
+                indent: SectionHeader.listTileIndent,
+                title: 'Appearance',
+              ),
               ValueListenableBuilder<AppTheme>(
                 valueListenable: settings.theme,
                 builder: (context, value, child) => ListTile(
@@ -208,7 +217,10 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              const ListTileHeader(title: 'Interactions'),
+              const SectionHeader(
+                indent: SectionHeader.listTileIndent,
+                title: 'Interactions',
+              ),
               if (!Platform.isIOS)
                 ValueListenableBuilder<String?>(
                   valueListenable: settings.downloadPath,
@@ -277,7 +289,10 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              const ListTileHeader(title: 'Security'),
+              const SectionHeader(
+                indent: SectionHeader.listTileIndent,
+                title: 'Security',
+              ),
               if (PlatformCapabilities.hasSecureDisplay)
                 ValueListenableBuilder<bool>(
                   valueListenable: settings.secureDisplay,
@@ -344,7 +359,10 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              const ListTileHeader(title: 'Development'),
+              const SectionHeader(
+                indent: SectionHeader.listTileIndent,
+                title: 'Development',
+              ),
               ValueListenableBuilder<bool>(
                 valueListenable: settings.showDev,
                 builder: (context, value, child) {
@@ -359,22 +377,15 @@ class SettingsPage extends StatelessWidget {
                 },
               ),
               if (context.watch<Logs?>() != null) ...[
-                Consumer<Logs>(
-                  builder: (context, logs, child) => SubStream<List<LogRecord>>(
-                    create: () => logs.stream(
-                      filter: (level, type) => level >= Level.SEVERE,
-                    ),
-                    builder: (context, snapshot) => ListTile(
-                      leading: const Icon(Icons.format_list_numbered),
-                      title: const Text('Logs'),
-                      subtitle: (snapshot.data?.isNotEmpty ?? false)
-                          ? Text('${snapshot.data!.length} errors logged')
-                          : null,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const LogsPage(),
-                        ),
-                      ),
+                Consumer<LogErrors>(
+                  builder: (context, errors, child) => ListTile(
+                    leading: const Icon(Icons.format_list_numbered),
+                    title: const Text('Logs'),
+                    subtitle: errors.isEmpty
+                        ? null
+                        : Text('${errors.length} errors logged'),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const LogsPage()),
                     ),
                   ),
                 ),

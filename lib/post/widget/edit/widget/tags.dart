@@ -93,7 +93,7 @@ class _TagsEditDisplayState extends State<TagsEditDisplay> {
         }
       });
     } on Exception catch (e, stackTrace) {
-      _logger.severe('Tag preview error: $e', e, stackTrace);
+      _logger.warn('Tag preview failed', null, e, stackTrace);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading tag preview: $e')),

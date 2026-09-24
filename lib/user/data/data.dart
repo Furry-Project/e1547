@@ -1,5 +1,5 @@
 export 'actions.dart';
 export 'client.dart';
-export 'controller.dart';
 export 'json.dart';
+export 'query.dart';
 export 'user.dart';

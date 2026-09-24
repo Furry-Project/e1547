@@ -1,8 +1,8 @@
 import 'package:e1547/post/post.dart';
 import 'package:flutter/material.dart';
 
-class PostDetailFloatingActionButton extends StatelessWidget {
-  const PostDetailFloatingActionButton({super.key, required this.post});
+class PostDetailFab extends StatelessWidget {
+  const PostDetailFab({super.key, required this.post});
 
   final Post post;
 

@@ -44,7 +44,7 @@ class CurrentIdentityTile extends StatelessWidget {
                   ? () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) =>
-                            UserLoadingPage(identity.username!),
+                            UserLoadingPage.name(identity.username!),
                       ),
                     )
                   : null,

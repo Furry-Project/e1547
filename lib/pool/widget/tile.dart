@@ -1,9 +1,10 @@
 import 'dart:math';
 
-import 'package:collection/collection.dart';
+import 'package:e1547/client/client.dart';
 import 'package:e1547/markup/markup.dart';
 import 'package:e1547/pool/pool.dart';
 import 'package:e1547/post/post.dart';
+import 'package:e1547/query/query.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:e1547/tag/tag.dart';
 import 'package:flutter/material.dart';
@@ -40,17 +41,20 @@ class PoolTile extends StatelessWidget {
     }
 
     Widget? image;
-    PoolController? controller = context.watch<PoolController?>();
 
-    if (pool.postIds.isNotEmpty && controller != null) {
-      int thumbnail = pool.postIds.first;
-      Post? post = controller.thumbnails.items?.firstWhereOrNull(
-        (e) => e.id == thumbnail,
-      );
-      if (post != null) {
-        image = ChangeNotifierProvider<PostController>.value(
-          value: controller.thumbnails,
-          child: Center(
+    if (pool.postIds.isNotEmpty) {
+      final client = context.watch<Client>();
+      final thumbnailId = pool.postIds.first;
+      image = QueryBuilder(
+        query: client.posts.useGet(id: thumbnailId, vendored: true),
+        builder: (context, state) {
+          final post = state.data;
+          if (post == null) return const SizedBox.shrink();
+          final filter = context.watch<FilterController<Post>?>();
+          if (filter != null && !filter.filter(post)) {
+            return const SizedBox.shrink();
+          }
+          return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 400),
               child: AspectRatio(
@@ -58,9 +62,9 @@ class PoolTile extends StatelessWidget {
                 child: PostImageTile(post: post),
               ),
             ),
-          ),
-        );
-      }
+          );
+        },
+      );
     }
 
     return Column(

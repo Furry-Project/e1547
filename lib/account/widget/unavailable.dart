@@ -5,8 +5,8 @@ import 'package:e1547/client/client.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:flutter/material.dart';
 
-class HostUnvailablePage extends StatelessWidget {
-  const HostUnvailablePage({super.key, this.offerResolve = false});
+class HostUnavailablePage extends StatelessWidget {
+  const HostUnavailablePage({super.key, this.offerResolve = false});
 
   final bool offerResolve;
 

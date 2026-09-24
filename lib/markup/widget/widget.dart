@@ -1,3 +1,4 @@
+export 'anchor.dart';
 export 'code.dart';
 export 'color.dart';
 export 'editor.dart';

@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:e1547/shared/shared.dart';
 import 'package:e1547/user/user.dart';
 
 class UserClient {
@@ -8,15 +7,13 @@ class UserClient {
   final Dio dio;
 
   // Technically missing users()
-  Future<User> get({
-    required String id,
-    bool? force,
-    CancelToken? cancelToken,
-  }) => dio
-      .get(
-        '/users/$id.json',
-        options: forceOptions(force),
-        cancelToken: cancelToken,
-      )
+  Future<User> get({required int id, CancelToken? cancelToken}) =>
+      _get(id.toString(), cancelToken: cancelToken);
+
+  Future<User> getByName({required String name, CancelToken? cancelToken}) =>
+      _get(name, cancelToken: cancelToken);
+
+  Future<User> _get(String lookup, {CancelToken? cancelToken}) => dio
+      .get('/users/$lookup.json', cancelToken: cancelToken)
       .then((response) => E621User.fromJson(response.data));
 }

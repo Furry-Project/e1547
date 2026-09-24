@@ -54,6 +54,35 @@ void main() {
       expect(find.textContaining('x := 1'), findsOneWidget);
     });
 
+    testWidgets('code block drops the line break it closes on', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DTextBody(
+            content: DTextDocument([DTextCodeBlock('x := 1\ny := 2\n')]),
+          ),
+        ),
+      );
+      final SelectableText text = tester.widget(
+        find.descendant(
+          of: find.byType(CodeWrap),
+          matching: find.byType(SelectableText),
+        ),
+      );
+      expect(text.data, 'x := 1\ny := 2');
+    });
+
+    testWidgets('raw block drops the line break it closes on', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DTextBody(
+            content: DTextDocument([DTextRawBlockText('plain text\n')]),
+          ),
+        ),
+      );
+      final SelectableText text = tester.widget(find.byType(SelectableText));
+      expect(text.data, 'plain text');
+    });
+
     testWidgets('quote wraps in QuoteWrap', (tester) async {
       await tester.pumpWidget(
         _wrap(
@@ -91,6 +120,25 @@ void main() {
       expect(find.byType(SectionWrap), findsOneWidget);
       expect(find.text('Heading'), findsOneWidget);
       expect(find.textContaining('inside'), findsOneWidget);
+    });
+
+    testWidgets('section title collapses whitespace', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DTextBody(
+            content: DTextDocument([
+              DTextSection(
+                title: '   Ember pre-rust (2024)\n - by tester  ',
+                expanded: true,
+                children: [
+                  DTextParagraph([DTextText('inside')]),
+                ],
+              ),
+            ]),
+          ),
+        ),
+      );
+      expect(find.text('Ember pre-rust (2024) - by tester'), findsOneWidget);
     });
 
     testWidgets('list renders each item with bullet', (tester) async {
@@ -380,6 +428,40 @@ void main() {
         ),
       );
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('wide table scrolls horizontally', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 300,
+            child: DTextBody(
+              content: DTextDocument([
+                DTextTable([
+                  DTextTableBody([
+                    DTextTableRow([
+                      for (var i = 0; i < 8; i++)
+                        DTextTableCell(
+                          cellType: DTextTableCellType.td,
+                          children: [DTextText('column $i')],
+                        ),
+                    ]),
+                  ]),
+                ]),
+              ]),
+            ),
+          ),
+        ),
+      );
+
+      final Scrollable scrollable = tester.widget(
+        find.descendant(
+          of: find.byType(DTextTableWidget),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      expect(scrollable.axisDirection, AxisDirection.right);
+      expect(tester.getSize(find.byType(Table)).width, greaterThan(300));
     });
   });
 }

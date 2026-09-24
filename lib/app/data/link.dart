@@ -61,12 +61,17 @@ class LeafLinkParser extends LinkParser {
     Uri? uri = Uri.tryParse(link);
     if (uri == null) return null;
 
+    String path = uri.path;
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+
     List<String> names = [];
     Match? match = pathToRegExp(
-      path,
+      this.path,
       parameters: names,
       caseSensitive: false,
-    ).firstMatch(uri.path);
+    ).firstMatch(path);
 
     if (match != null) {
       Map<String, String> arguments = extract(names, match);
@@ -110,7 +115,21 @@ class E621LinkParser extends BranchLinkParser {
           Link(type: LinkType.post, id: int.parse(args['id']!), query: query),
     ),
     LeafLinkParser(
+      path: r'/post/:action(view|flag)/:id(\d+)',
+      transformer: (args, query) =>
+          Link(type: LinkType.post, id: int.parse(args['id']!), query: query),
+    ),
+    LeafLinkParser(
+      path: r'/post/:action(show|view)/:id(\d+)/:title',
+      transformer: (args, query) =>
+          Link(type: LinkType.post, id: int.parse(args['id']!), query: query),
+    ),
+    LeafLinkParser(
       path: r'/posts',
+      transformer: (args, query) => Link(type: LinkType.post, query: query),
+    ),
+    LeafLinkParser(
+      path: r'/post',
       transformer: (args, query) => Link(type: LinkType.post, query: query),
     ),
     LeafLinkParser(
@@ -126,6 +145,10 @@ class E621LinkParser extends BranchLinkParser {
       transformer: (args, query) => Link(type: LinkType.pool, query: query),
     ),
     LeafLinkParser(
+      path: r'/pool',
+      transformer: (args, query) => Link(type: LinkType.pool, query: query),
+    ),
+    LeafLinkParser(
       path:
           r'/user'
           '$_showEnding'
@@ -135,6 +158,19 @@ class E621LinkParser extends BranchLinkParser {
         id: int.tryParse(args['name']!) ?? args['name']!,
         query: query,
       ),
+    ),
+    LeafLinkParser(
+      path: r'/user',
+      transformer: (args, query) => Link(type: LinkType.user, query: query),
+    ),
+    LeafLinkParser(
+      path: r'/wiki_pages/show_or_new',
+      transformer: (args, query) =>
+          Link(type: LinkType.wiki, id: query?['title'], query: query),
+    ),
+    LeafLinkParser(
+      path: r'/wiki_pages/search',
+      transformer: (args, query) => Link(type: LinkType.wiki, query: query),
     ),
     LeafLinkParser(
       path:
@@ -190,23 +226,35 @@ extension LinkOnTapExtension on LinkParser {
         if (id != null) {
           return navWrapper((context) => PostLoadingPage(id));
         }
-        return navWrapper((context) => PostsSearchPage(query: result.query));
+        return navWrapper(
+          (context) =>
+              PostsPage(params: PostParams(tags: result.query?['tags'])),
+        );
       case LinkType.pool:
         int? id = result.id as int?;
         if (id != null) {
           return navWrapper((context) => PoolLoadingPage(id));
         }
-        return navWrapper((context) => PoolsPage(search: result.query), true);
+        return navWrapper(
+          (context) => PoolsPage(search: PoolParams.fromQuery(result.query)),
+          true,
+        );
       case LinkType.user:
         Object? id = result.id;
+        if (id is int) {
+          return navWrapper((context) => UserLoadingPage(id));
+        }
         if (id != null) {
-          return navWrapper((context) => UserLoadingPage(id.toString()));
+          return navWrapper((context) => UserLoadingPage.name(id.toString()));
         }
         break;
       case LinkType.wiki:
         Object? id = result.id;
+        if (id is int) {
+          return navWrapper((context) => WikiLoadingPage(id));
+        }
         if (id != null) {
-          return navWrapper((context) => WikiLoadingPage(id.toString()));
+          return navWrapper((context) => WikiLoadingPage.title(id.toString()));
         }
         break;
       case LinkType.topic:

@@ -17,6 +17,7 @@ abstract class Post with _$Post {
     required Map<String, String?>? variants,
     required Map<String, List<String>> tags,
     required int uploaderId,
+    required String? uploaderName,
     required DateTime createdAt,
     required DateTime? updatedAt,
     required int score,

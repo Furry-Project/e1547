@@ -5,5 +5,6 @@ export 'fab.dart';
 export 'history.dart';
 export 'image.dart';
 export 'list.dart';
-export 'sheet.dart';
+export 'prompt.dart';
+export 'query.dart';
 export 'tile.dart';

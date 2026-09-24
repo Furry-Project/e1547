@@ -31,15 +31,16 @@ enum PostReportType {
 
   String get body => switch (this) {
     rating =>
-      'A post is rated as incorretly, such as Rating Safe when it contains Explicit content.',
+      'The rating of the submission has been set to something incorrect.',
     file =>
-      'Files that either contain malicious code, or contain other files attached to them.',
-    source => 'Sources that link to malicious pages.',
+      'The file contains either malicious code or contains a hidden file archive. This is not for imagery depicted in the image itself.',
+    source =>
+      'One or more of the listed sources link to malicious pages or pay content.',
     description =>
-      'The description is used to harass someone, or if a valid description is being vandalized.',
+      'The description contains malicious content, or has been edited to contain abusive material.',
     note =>
-      'Notes in languages that aren\'t in english, or insult users, or are completely unrelated to the image itself.',
+      'The notes on this post are wrong, harassive, or otherwise abusive.',
     tagging =>
-      'Adding wrong tags, removing valid tags, creating insulting tags are all reasons to report a post for tagging abuse.',
+      'One or more tags on this post aren\'t valid or one or more valid tags have been removed from this post.',
   };
 }

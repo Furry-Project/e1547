@@ -92,6 +92,7 @@ class AppInitState extends State<AppInit> {
           providers: [
             Provider.value(value: logs),
             Provider.value(value: storage),
+            ChangeNotifierProvider(create: (context) => LogErrors(logs)),
           ],
           child: widget.child,
         );

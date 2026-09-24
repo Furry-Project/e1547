@@ -108,6 +108,9 @@ class TaskRepository extends DatabaseAccessor<GeneratedDatabase>
     ).watch().future;
   }
 
+  StreamFuture<List<Task>> all({int? identity}) =>
+      _querySelect(identity: identity).watch().future;
+
   StreamFuture<List<Task>> active({int? identity}) => _querySelect(
     identity: identity,
     statuses: {TaskStatus.pending, TaskStatus.running},

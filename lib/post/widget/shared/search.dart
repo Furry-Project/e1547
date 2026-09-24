@@ -70,8 +70,8 @@ class EditTagPrompt extends StatelessWidget {
   }
 }
 
-class AddTagFloatingActionButton extends StatelessWidget {
-  const AddTagFloatingActionButton({
+class AddTagFab extends StatelessWidget {
+  const AddTagFab({
     super.key,
     this.tag,
     required this.onSubmit,
@@ -89,7 +89,7 @@ class AddTagFloatingActionButton extends StatelessWidget {
     PromptActionController controller =
         this.controller ?? PromptActions.of(context);
 
-    return PromptFloatingActionButton(
+    return PromptFab(
       controller: controller,
       builder: (context) => EditTagPrompt(
         tag: tag,

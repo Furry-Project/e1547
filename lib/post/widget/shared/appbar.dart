@@ -36,29 +36,21 @@ List<PopupMenuItem<VoidCallback>> postMenuUserActions(
   BuildContext context,
   Post post,
 ) {
+  final cacheSize = context.read<ImageCacheSize?>()?.size;
   return [
     PopupMenuTile(
       title: 'Edit',
       icon: Icons.edit,
       value: () => guardWithLogin(
         context: context,
-        callback: () {
-          PostController? controller = context.read<PostController?>();
-          int? cacheSize = context.read<ImageCacheSize?>()?.size;
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => ImageCacheSizeProvider(
-                size: cacheSize,
-                child: controller != null
-                    ? PostsRouteConnector(
-                        controller: controller,
-                        child: PostEditPage(post: post),
-                      )
-                    : PostEditPage(post: post),
-              ),
+        callback: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ImageCacheSizeProvider(
+              size: cacheSize,
+              child: PostEditPage(post: post),
             ),
-          );
-        },
+          ),
+        ),
         error: 'You must be logged in to edit posts!',
       ),
     ),
@@ -67,15 +59,7 @@ List<PopupMenuItem<VoidCallback>> postMenuUserActions(
       icon: Icons.comment,
       value: () => guardWithLogin(
         context: context,
-        callback: () async {
-          PostController controller = context.read<PostController>();
-          bool success = await writeComment(context: context, postId: post.id);
-          if (success) {
-            controller.replacePost(
-              post.copyWith(commentCount: post.commentCount + 1),
-            );
-          }
-        },
+        callback: () => writeComment(context: context, postId: post.id),
         error: 'You must be logged in to comment!',
       ),
     ),

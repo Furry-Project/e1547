@@ -20,7 +20,7 @@ class AccountClient {
   final ValueNotifier<Traits> traits;
   final PostClient postsService;
 
-  Future<void> available() => dio.get('');
+  Future<void> available() => dio.head('/status.json');
 
   Future<void> push({required Traits traits, CancelToken? cancelToken}) async {
     Traits previous = this.traits.value;
@@ -46,23 +46,14 @@ class AccountClient {
     }
   }
 
-  Future<void> pull({bool? force, CancelToken? cancelToken}) =>
-      get(force: force, cancelToken: cancelToken);
+  Future<void> pull({CancelToken? cancelToken}) =>
+      get(cancelToken: cancelToken);
 
-  Future<Account?> get({bool? force, CancelToken? cancelToken}) async {
+  Future<Account?> get({CancelToken? cancelToken}) async {
     if (identity.username == null) return null;
 
     Account result = await dio
-        .get(
-          '/users/${identity.username}.json',
-          options: ClientCacheConfig(
-            maxAge: const Duration(hours: 1),
-            policy: (force ?? false)
-                ? CachePolicy.refresh
-                : CachePolicy.request,
-          ).toOptions(),
-          cancelToken: cancelToken,
-        )
+        .get('/users/${identity.username}.json', cancelToken: cancelToken)
         .then((response) => E621Account.fromJson(response.data));
 
     Post? avatar;
@@ -71,7 +62,6 @@ class AccountClient {
       // TODO: this shouldnt be here
       avatar = await postsService.get(
         id: result.avatarId!,
-        force: force,
         cancelToken: cancelToken,
       );
     }

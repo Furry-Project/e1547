@@ -231,8 +231,8 @@ class ActionIndicators extends StatelessWidget {
   }
 }
 
-class PromptFloatingActionButton extends StatelessWidget {
-  const PromptFloatingActionButton({
+class PromptFab extends StatelessWidget {
+  const PromptFab({
     super.key,
     this.controller,
     required this.builder,
@@ -335,40 +335,6 @@ SlidingSheetDialog defaultSlidingSheetDialog(
   );
 }
 
-class DefaultSheetBody extends StatelessWidget {
-  const DefaultSheetBody({super.key, this.title, required this.body});
-
-  final Widget? title;
-  final Widget body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null)
-            Padding(
-              padding: const EdgeInsets.all(4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: DefaultTextStyle(
-                      style: Theme.of(context).textTheme.titleLarge!,
-                      child: title!,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          body,
-        ],
-      ),
-    );
-  }
-}
-
 class SheetHandle extends StatelessWidget {
   const SheetHandle({super.key});
 
@@ -390,3 +356,88 @@ class SheetHandle extends StatelessWidget {
     );
   }
 }
+
+/// Shows [sliver] under [header], as a dialog on desktop and a sheet
+/// elsewhere.
+///
+/// Both sides scroll the content themselves, so the caller passes plain
+/// slivers.
+///
+/// [pinnedHeader] holds the header while the content scrolls under it, and the
+/// sheet's grab handle stays pinned either way.
+Future<T?> showSliverPrompt<T>(
+  BuildContext context, {
+  required WidgetBuilder header,
+  required Widget sliver,
+  bool pinnedHeader = true,
+  double dialogWidth = 600,
+  Widget Function(BuildContext context, Widget child)? parentBuilder,
+  BoxConstraints? dialogConstraints,
+}) {
+  final Widget headerSliver = SliverToBoxAdapter(
+    child: Builder(builder: header),
+  );
+  final List<Widget> slivers = [if (!pinnedHeader) headerSliver, sliver];
+
+  if (Theme.of(context).isDesktop) {
+    Widget content = CustomScrollView(shrinkWrap: true, slivers: slivers);
+    if (dialogConstraints != null) {
+      content = ConstrainedBox(constraints: dialogConstraints, child: content);
+    }
+    return showDialog<T>(
+      context: context,
+      builder: (context) {
+        final Widget dialog = AlertDialog(
+          titlePadding: EdgeInsets.zero,
+          contentPadding: EdgeInsets.zero,
+          title: pinnedHeader
+              ? SizedBox(
+                  width: dialogWidth,
+                  child: Builder(builder: header),
+                )
+              : null,
+          content: SizedBox(width: dialogWidth, child: content),
+        );
+        return parentBuilder?.call(context, dialog) ?? dialog;
+      },
+    );
+  }
+  return showDefaultSlidingBottomSheet<T>(
+    context,
+    null,
+    parentBuilder: parentBuilder,
+    headerBuilder: (context, state) => Material(
+      color: Colors.transparent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SheetHandle(),
+          if (pinnedHeader) Builder(builder: header),
+        ],
+      ),
+    ),
+    customBuilder: (context, controller, state) => Material(
+      child: CustomScrollView(controller: controller, slivers: slivers),
+    ),
+  );
+}
+
+/// Shows a box [body] under [header], as a dialog on desktop and a sheet
+/// elsewhere.
+Future<T?> showPrompt<T>(
+  BuildContext context, {
+  required WidgetBuilder header,
+  required Widget body,
+  bool pinnedHeader = false,
+  double dialogWidth = 600,
+  Widget Function(BuildContext context, Widget child)? parentBuilder,
+  BoxConstraints? dialogConstraints,
+}) => showSliverPrompt<T>(
+  context,
+  header: header,
+  sliver: SliverToBoxAdapter(child: body),
+  pinnedHeader: pinnedHeader,
+  dialogWidth: dialogWidth,
+  parentBuilder: parentBuilder,
+  dialogConstraints: dialogConstraints,
+);

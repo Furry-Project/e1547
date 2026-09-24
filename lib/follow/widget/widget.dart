@@ -4,6 +4,7 @@ export 'connector.dart';
 export 'drawer.dart';
 export 'editor.dart';
 export 'icon.dart';
+export 'query.dart';
 export 'subscriptions.dart';
 export 'tile.dart';
 export 'timeline.dart';

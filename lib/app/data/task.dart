@@ -9,13 +9,13 @@ import 'package:workmanager/workmanager.dart';
 
 export 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-final Logger _logger = Logger('IsolateSetup');
+final Logger _logger = Logger('BackgroundTasks');
 
 /// Registers background tasks for the app.
 Future<void> initializeBackgroundTasks() async {
   if (!PlatformCapabilities.hasBackgroundWorker) return;
   await Workmanager().initialize(executeBackgroundTasks);
-  _logger.fine('Initialized background tasks');
+  _logger.debug('Background worker initialized');
 }
 
 CancelToken createBackgroundCancelToken(String task) {
@@ -36,11 +36,15 @@ CancelToken createBackgroundCancelToken(String task) {
 Future<void> registerFollowBackgroundTask(List<Follow> follows) async {
   if (!PlatformCapabilities.hasBackgroundWorker) return;
   if (follows.where((e) => e.type == FollowType.notify).isEmpty) {
-    _logger.fine('Unregistering background task');
+    _logger.debug('Unregistered {task}', {'task': followsBackgroundTaskKey});
     return Workmanager().cancelByUniqueName(followsBackgroundTaskKey);
   }
   if (Platform.isIOS) {
-    _logger.fine('Registered iOS one-off task');
+    _logger.debug('Registered {schedule} {task} on {platform}', {
+      'task': followsBackgroundTaskKey,
+      'platform': 'ios',
+      'schedule': 'one_off',
+    });
     Workmanager().registerProcessingTask(
       followsBackgroundTaskKey,
       followsBackgroundTaskKey,
@@ -48,7 +52,11 @@ Future<void> registerFollowBackgroundTask(List<Follow> follows) async {
       constraints: Constraints(networkType: NetworkType.connected),
     );
   } else if (Platform.isAndroid) {
-    _logger.fine('Registered Android periodic task');
+    _logger.debug('Registered {schedule} {task} on {platform}', {
+      'task': followsBackgroundTaskKey,
+      'platform': 'android',
+      'schedule': 'periodic',
+    });
     await Workmanager().registerPeriodicTask(
       followsBackgroundTaskKey,
       followsBackgroundTaskKey,

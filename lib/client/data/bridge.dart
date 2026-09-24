@@ -6,5 +6,5 @@ abstract class BridgeClient {
 
   Future<void> push({required Traits traits, CancelToken? cancelToken});
 
-  Future<void> pull({bool? force, CancelToken? cancelToken});
+  Future<void> pull({CancelToken? cancelToken});
 }

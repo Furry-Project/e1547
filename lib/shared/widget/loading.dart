@@ -96,7 +96,11 @@ class LoadingPage extends StatelessWidget {
   final Widget Function(BuildContext context, WidgetBuilder child)? pageBuilder;
   final Widget Function(BuildContext context, WidgetBuilder child)?
   loadingBuilder;
+
+  /// Title shown inside the empty state's [IconMessage].
   final Widget? onEmpty;
+
+  /// Title shown inside the failed state's [IconMessage].
   final Widget? onError;
   final bool isLoading;
   final bool isEmpty;
@@ -123,17 +127,15 @@ class LoadingPage extends StatelessWidget {
         case LoadingPageState.loading:
           return const Center(child: CircularProgressIndicator());
         case LoadingPageState.error:
-          return onError ??
-              const IconMessage(
-                icon: Icon(Icons.warning_amber_outlined),
-                title: Text('Failed to load'),
-              );
+          return IconMessage(
+            icon: const Icon(Icons.warning_amber_outlined),
+            title: onError ?? const Text('Failed to load'),
+          );
         case LoadingPageState.empty:
-          return onEmpty ??
-              const IconMessage(
-                icon: Icon(Icons.clear),
-                title: Text('Nothing to see here'),
-              );
+          return IconMessage(
+            icon: const Icon(Icons.clear),
+            title: onEmpty ?? const Text('Nothing to see here'),
+          );
         case LoadingPageState.done:
           return child(context);
       }

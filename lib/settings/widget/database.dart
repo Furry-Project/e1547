@@ -156,7 +156,7 @@ class DatabaseExportTile extends StatelessWidget {
     } on Exception catch (e) {
       navigator.pop();
       messenger.showSnackBar(const SnackBar(content: Text('Export failed')));
-      _logger.severe('Database export failed', e);
+      _logger.warn('Database export failed', null, e);
     }
   }
 
@@ -185,10 +185,11 @@ class DatabaseImportTile extends StatelessWidget {
     if (!confirmed) return;
 
     try {
+      // iOS needs custom file type declarations but we are lazy so we pick any
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         dialogTitle: 'Import Database',
-        type: FileType.custom,
-        allowedExtensions: ['db'],
+        type: Platform.isIOS ? FileType.any : FileType.custom,
+        allowedExtensions: Platform.isIOS ? null : ['db'],
       );
 
       final path = result?.files.single.path;
@@ -235,7 +236,7 @@ class DatabaseImportTile extends StatelessWidget {
         messenger.showSnackBar(
           SnackBar(content: Text('Invalid database file: $e')),
         );
-        _logger.warning('Database validation failed', e);
+        _logger.warn('Database validation failed', null, e);
         return;
       } finally {
         driftRuntimeOptions.dontWarnAboutMultipleDatabases = false;

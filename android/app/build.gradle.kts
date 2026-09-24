@@ -56,6 +56,9 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
         }
+        debug {
+            applicationIdSuffix = ".debug"
+        }
     }
 
     // Splits and AAB builds are mutually exclusive in AGP 8 (the bundle

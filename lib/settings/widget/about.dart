@@ -2,35 +2,23 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:e1547/app/app.dart';
+import 'package:e1547/query/query.dart';
 import 'package:e1547/settings/settings.dart';
 import 'package:e1547/shared/shared.dart';
 import 'package:e1547/topic/topic.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_sub/flutter_sub.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class AboutPage extends StatefulWidget {
+class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
   @override
-  State<AboutPage> createState() => _AboutPageState();
-}
-
-class _AboutPageState extends State<AboutPage> {
-  late AppInfoClient? client;
-
-  late Future<List<AppVersion>>? versions = client?.getNewVersions();
-  late Future<List<Donor>>? bundledDonors = client?.getBundledDonors();
-  late Future<List<Donor>>? donors = client?.getDonors();
-
-  @override
-  void didChangeDependencies() {
-    client = context.read<AppInfoClient?>();
-    super.didChangeDependencies();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final client = context.watch<AppInfoClient?>();
+    final versions = client?.useNewVersions();
+    final bundledDonors = client?.useBundledDonors();
+    final donors = client?.useDonors();
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const TransparentAppBar(
@@ -39,14 +27,11 @@ class _AboutPageState extends State<AboutPage> {
       body: LimitedWidthLayout.builder(
         builder: (context) => PullToRefresh(
           onRefresh: () async {
-            setState(() {
-              versions = client?.getNewVersions(force: true);
-              bundledDonors = client?.getBundledDonors();
-              donors = client?.getDonors(force: true);
-            });
-            await versions;
-            await bundledDonors;
-            await donors;
+            await Future.wait([
+              ?versions?.invalidate(),
+              ?bundledDonors?.invalidate(),
+              ?donors?.invalidate(),
+            ]);
           },
           child: ListView(
             padding: LimitedWidthLayout.of(context).padding,
@@ -58,6 +43,8 @@ class _AboutPageState extends State<AboutPage> {
                 child: Card(
                   child: Column(
                     children: [
+                      if (PlatformCapabilities.isExperimental)
+                        const AboutExperimental(),
                       AboutVersion(newVersions: versions),
                       const AboutLinks(),
                     ],
@@ -152,11 +139,34 @@ class AboutLogo extends StatelessWidget {
   }
 }
 
+class AboutExperimental extends StatelessWidget {
+  const AboutExperimental({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          leading: FaIcon(
+            FontAwesomeIcons.triangleExclamation,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          title: const Text('Experimental platform'),
+          subtitle: const Text(
+            'This platform is not supported. Expect bugs and missing features.',
+          ),
+        ),
+        const Divider(),
+      ],
+    );
+  }
+}
+
 class AboutVersion extends StatelessWidget {
   // ignore: unused_element
   const AboutVersion({super.key, required this.newVersions});
 
-  final Future<List<AppVersion>>? newVersions;
+  final Query<List<AppVersion>>? newVersions;
 
   @override
   Widget build(BuildContext context) {
@@ -208,63 +218,64 @@ class AboutVersion extends StatelessWidget {
       );
     }
 
-    return FutureBuilder<List<AppVersion>?>(
-      future: newVersions,
-      builder: (context, snapshot) {
-        String message;
-        Widget icon;
-        VoidCallback? onTap;
-        if (snapshot.connectionState != ConnectionState.done) {
-          message = 'Fetching updates...';
-          icon = const FaIcon(FontAwesomeIcons.clockRotateLeft);
-        } else if (snapshot.data == null) {
-          message = 'Failed to check for updates';
-          onTap = openGithub;
-          icon = const FaIcon(FontAwesomeIcons.circleExclamation);
-        } else if (snapshot.data!.isEmpty) {
-          message = 'You have the newest version';
-          icon = const FaIcon(FontAwesomeIcons.clockRotateLeft);
-        } else {
-          message =
-              'A newer version is available: ${snapshot.data!.first.version}';
-          onTap = () => showDialog(
-            context: context,
-            builder: (context) => changesDialog(snapshot.data!),
-          );
-          icon = const FaIcon(FontAwesomeIcons.download);
-        }
+    Widget tile(QueryState<List<AppVersion>>? state) {
+      final List<AppVersion>? data = state?.data;
+      String message;
+      Widget icon;
+      VoidCallback? onTap;
+      if (data == null && (state?.isLoading ?? true)) {
+        message = 'Fetching updates...';
+        icon = const FaIcon(FontAwesomeIcons.clockRotateLeft);
+      } else if (data == null) {
+        message = 'Failed to check for updates';
+        onTap = openGithub;
+        icon = const FaIcon(FontAwesomeIcons.circleExclamation);
+      } else if (data.isEmpty) {
+        message = 'You have the newest version';
+        icon = const FaIcon(FontAwesomeIcons.clockRotateLeft);
+      } else {
+        message = 'A newer version is available: ${data.first.version}';
+        onTap = () => showDialog(
+          context: context,
+          builder: (context) => changesDialog(data),
+        );
+        icon = const FaIcon(FontAwesomeIcons.download);
+      }
 
-        return Column(
-          children: [
-            Stack(
-              fit: StackFit.passthrough,
-              children: [
-                ListTile(
-                  leading: icon,
-                  title: const Text('Version'),
-                  subtitle: Text(message),
-                  onTap: onTap,
-                ),
-                if (snapshot.data?.isNotEmpty ?? false)
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      height: 10,
-                      width: 10,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.red,
-                      ),
+      return Column(
+        children: [
+          Stack(
+            fit: StackFit.passthrough,
+            children: [
+              ListTile(
+                leading: icon,
+                title: const Text('Version'),
+                subtitle: Text(message),
+                onTap: onTap,
+              ),
+              if (data?.isNotEmpty ?? false)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    height: 10,
+                    width: 10,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.red,
                     ),
                   ),
-              ],
-            ),
-            const Divider(),
-          ],
-        );
-      },
-    );
+                ),
+            ],
+          ),
+          const Divider(),
+        ],
+      );
+    }
+
+    final query = newVersions;
+    if (query == null) return tile(null);
+    return QueryBuilder(query: query, builder: (context, state) => tile(state));
   }
 }
 
@@ -356,63 +367,66 @@ class AboutLinks extends StatelessWidget {
 class AboutDonations extends StatelessWidget {
   const AboutDonations({super.key, this.bundledDonors, this.donors});
 
-  final Future<List<Donor>>? bundledDonors;
-  final Future<List<Donor>>? donors;
+  final Query<List<Donor>>? bundledDonors;
+  final Query<List<Donor>>? donors;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: bundledDonors,
-      builder: (context, assetDonations) => FutureBuilder(
-        future: donors,
-        builder: (context, githubDonations) {
-          List<Donor>? donors;
+    Widget section(
+      QueryState<List<Donor>>? assetDonations,
+      QueryState<List<Donor>>? githubDonations,
+    ) {
+      List<Donor>? donors = githubDonations?.data ?? assetDonations?.data;
 
-          if (githubDonations.hasData) {
-            donors = githubDonations.data;
-          } else if (assetDonations.hasData) {
-            donors = assetDonations.data;
-          }
+      if ((githubDonations?.isError ?? false) &&
+          (assetDonations?.isError ?? false)) {
+        return const IconMessage(
+          icon: Icon(Icons.warning_amber),
+          title: Text('Failed to fetch donors'),
+        );
+      }
 
-          if (githubDonations.hasError && assetDonations.hasError) {
-            return const IconMessage(
-              icon: Icon(Icons.warning_amber),
-              title: Text('Failed to fetch donors'),
-            );
-          }
+      if (donors?.isEmpty ?? false) {
+        return const SizedBox();
+      }
 
-          if (donors?.isEmpty ?? false) {
-            return const SizedBox();
-          }
-
-          return Column(
-            children: [
-              const ListTile(
-                title: Text('Donors'),
-                leading: FaIcon(FontAwesomeIcons.handHoldingHeart),
-                subtitle: Text('Thanks for helping me keep up development!'),
+      return Column(
+        children: [
+          const ListTile(
+            title: Text('Donors'),
+            leading: FaIcon(FontAwesomeIcons.handHoldingHeart),
+            subtitle: Text('Thanks for helping me keep up development!'),
+          ),
+          const Divider(),
+          const SizedBox(height: 8),
+          if (donors == null)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(8),
+                child: CircularProgressIndicator(),
               ),
-              const Divider(),
-              const SizedBox(height: 8),
-              if (donors == null ||
-                  (bundledDonors == null && this.donors == null))
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(8),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              else if (donors.isEmpty)
-                // I dont like whining about no donors
-                const ListTile(
-                  title: Text('No donors yet'),
-                  leading: FaIcon(FontAwesomeIcons.heartCrack),
-                )
-              else
-                Donors(donors: donors),
-            ],
-          );
-        },
+            )
+          else if (donors.isEmpty)
+            // I dont like whining about no donors
+            const ListTile(
+              title: Text('No donors yet'),
+              leading: FaIcon(FontAwesomeIcons.heartCrack),
+            )
+          else
+            Donors(donors: donors),
+        ],
+      );
+    }
+
+    final bundled = bundledDonors;
+    final remote = donors;
+    if (bundled == null || remote == null) return section(null, null);
+    return QueryBuilder(
+      query: bundled,
+      builder: (context, assetDonations) => QueryBuilder(
+        query: remote,
+        builder: (context, githubDonations) =>
+            section(assetDonations, githubDonations),
       ),
     );
   }
@@ -423,11 +437,12 @@ class DrawerUpdateIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SubFuture<List<AppVersion>>(
-      create: () =>
-          context.read<AppInfoClient?>()?.getNewVersions() ?? Future.value([]),
-      builder: (context, snapshot) {
-        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+    final query = context.watch<AppInfoClient?>()?.useNewVersions();
+    if (query == null) return const Icon(Icons.info);
+    return QueryBuilder(
+      query: query,
+      builder: (context, state) {
+        if (state.data?.isNotEmpty ?? false) {
           return Stack(
             children: [
               const Icon(Icons.update),

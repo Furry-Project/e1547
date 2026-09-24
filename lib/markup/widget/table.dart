@@ -35,33 +35,44 @@ class DTextTableWidget extends StatelessWidget {
         .reduce((a, b) => a > b ? a : b);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Table(
-        border: TableBorder.all(color: Theme.of(context).dividerColor),
-        defaultColumnWidth: const IntrinsicColumnWidth(),
-        children: [
-          for (final row in rows)
-            TableRow(
-              decoration: row.isHead
-                  ? BoxDecoration(color: Theme.of(context).hoverColor)
-                  : null,
-              children: [
-                for (var i = 0; i < columns; i++)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    child: i < row.cells.length
-                        ? DTextInlineSpans(
-                            children: row.cells[i].children,
-                            isHeader:
-                                row.cells[i].cellType == DTextTableCellType.th,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-              ],
-            ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Table(
+            border: TableBorder.all(color: Theme.of(context).dividerColor),
+            defaultColumnWidth: const IntrinsicColumnWidth(),
+            children: [
+              for (final row in rows)
+                TableRow(
+                  decoration: row.isHead
+                      ? BoxDecoration(color: Theme.of(context).hoverColor)
+                      : null,
+                  children: [
+                    for (var i = 0; i < columns; i++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: i < row.cells.length
+                            ? ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: constraints.maxWidth,
+                                ),
+                                child: DTextInlineSpans(
+                                  children: row.cells[i].children,
+                                  isHeader:
+                                      row.cells[i].cellType ==
+                                      DTextTableCellType.th,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

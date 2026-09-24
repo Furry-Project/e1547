@@ -46,12 +46,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: setup actions
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
-          distribution: "adopt"
+          distribution: "temurin"
           java-version: "17"
 
       - name: parse flutter version
@@ -65,13 +65,6 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
-      - name: cache flutter dependencies
-        uses: actions/cache@v5
-        with:
-          path: ${{ env.PUB_CACHE }}
-          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: ${{ runner.os }}-flutter-
-
       - name: get flutter dependencies
         run: flutter pub get
 
@@ -79,7 +72,7 @@ jobs:
         if: ${{ github.event.inputs.version != 'none' }}
         run: |
           dart pub global activate cider
-          cider bump ${{ env.VERSION_BUMP }} --bump-build
+          dart pub global run cider bump ${{ env.VERSION_BUMP }} --bump-build
 
       - name: configure release keys
         env:
@@ -131,7 +124,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: setup actions
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: parse flutter version
         run: |
@@ -144,13 +137,6 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
-      - name: cache flutter dependencies
-        uses: actions/cache@v5
-        with:
-          path: ${{ env.PUB_CACHE }}
-          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: ${{ runner.os }}-flutter-
-
       - name: get flutter dependencies
         run: flutter pub get
 
@@ -158,7 +144,7 @@ jobs:
         if: ${{ github.event.inputs.version != 'none' }}
         run: |
           dart pub global activate cider
-          cider bump ${{ env.VERSION_BUMP }} --bump-build
+          dart pub global run cider bump ${{ env.VERSION_BUMP }} --bump-build
 
       - name: build IPA
         run: flutter build ios --no-codesign
@@ -177,8 +163,124 @@ jobs:
           name: release-ios
           path: Runner.ipa
 
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - name: setup actions
+        uses: actions/checkout@v7
+
+      - name: parse flutter version
+        shell: bash
+        run: |
+          export FLUTTER_VERSION=$(./.github/workflows/get_flutter_version.sh)
+          echo "FLUTTER_VERSION=$FLUTTER_VERSION" >> $GITHUB_ENV
+
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: get flutter dependencies
+        run: flutter pub get
+
+      - name: bump version
+        if: ${{ github.event.inputs.version != 'none' }}
+        shell: bash
+        run: |
+          dart pub global activate cider
+          dart pub global run cider bump ${{ env.VERSION_BUMP }} --bump-build
+
+      - name: setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: install InnoSetup
+        run: bundle exec fastlane windows bootstrap
+
+      - name: build EXE
+        run: bundle exec fastlane windows build
+
+      - name: package release
+        shell: bash
+        run: mv "$(find dist -name '*.exe' | head -1)" e1547-setup.exe
+
+      - name: upload EXE to artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-exe
+          path: e1547-setup.exe
+
+  linux-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup actions
+        uses: actions/checkout@v7
+
+      - name: install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libmpv-dev mpv
+
+      - name: parse flutter version
+        run: |
+          export FLUTTER_VERSION=$(./.github/workflows/get_flutter_version.sh)
+          echo "FLUTTER_VERSION=$FLUTTER_VERSION" >> $GITHUB_ENV
+
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: get flutter dependencies
+        run: flutter pub get
+
+      - name: bump version
+        if: ${{ github.event.inputs.version != 'none' }}
+        run: |
+          dart pub global activate cider
+          dart pub global run cider bump ${{ env.VERSION_BUMP }} --bump-build
+
+      - name: setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: build bundle
+        run: bundle exec fastlane linux build
+
+      - name: build DEB
+        env:
+          DESTDIR: dist/linux/root
+        run: |
+          bundle exec fastlane linux install
+          bundle exec fastlane linux pkgdeb
+
+      - name: package release
+        run: |
+          mv dist/linux/*.deb e1547.deb
+          cp -r build/linux/x64/release/bundle e1547
+          tar czf e1547.tar.gz e1547
+
+      - name: upload DEB to artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-deb
+          path: e1547.deb
+
+      - name: upload tarball to artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-tar
+          path: e1547.tar.gz
+
   release:
-    needs: [android-build, ios-build]
+    needs: [android-build, ios-build, windows-build, linux-build]
     if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     steps:
@@ -190,14 +292,14 @@ jobs:
           private-key: ${{ secrets.PUBLISHER_PRIVATE_KEY }}
 
       - name: setup actions
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ steps.publisher.outputs.token }}
 
       - name: setup ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.1"
+          ruby-version: "3.3"
           bundler-cache: true
 
       - name: parse flutter version
@@ -242,7 +344,7 @@ jobs:
 
       - name: commit version increase
         if: ${{ github.event.inputs.version != 'none' && github.event.inputs.dry_run != 'true' }}
-        uses: EndBug/add-and-commit@v10
+        uses: EndBug/add-and-commit@v11
         with:
           message: increased version
           default_author: github_actions
@@ -277,6 +379,21 @@ jobs:
         with:
           name: release-ios
 
+      - name: download EXE from artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: release-exe
+
+      - name: download DEB from artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: release-deb
+
+      - name: download tarball from artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: release-tar
+
       - name: arrange asset files
         run: |
           mkdir -p build/app/outputs/bundle/release
@@ -310,23 +427,26 @@ jobs:
             e1547-arm64.apk
             e1547-armv7.apk
             e1547.ipa
+            e1547-setup.exe
+            e1547.deb
+            e1547.tar.gz
 
   forum-publish:
     needs: [release]
     if: ${{ github.ref == 'refs/heads/master' && github.event.inputs.skip_forum != 'true' && github.event.inputs.dry_run != 'true' }}
     runs-on: ubuntu-latest
     env:
-      DMARK_VERSION: '0.0.6'
+      DMARK_VERSION: '2.0.0'
     steps:
       - name: setup actions
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: master
 
       - name: setup node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: setup dart
         uses: dart-lang/setup-dart@v1
@@ -369,18 +489,17 @@ jobs:
       - name: download dmark
         run: |
           curl -fsSL \
-            "https://libs.cdn.clynamic.net/dmark/${DMARK_VERSION}/dmark.js" \
+            "https://libs.cdn.clynamic.net/dmark/${DMARK_VERSION}/dmark.md.js" \
             -o dmark.mjs
 
       - name: convert markdown to dtext
         run: |
           cat > convert.mjs <<'EOF'
-          import { parseMarkdown, formatDText } from './dmark.mjs';
+          import { convertMarkdownToDText } from './dmark.mjs';
           import { readFileSync, writeFileSync } from 'node:fs';
           const md = readFileSync('version_changelog.md', 'utf8');
-          const parsed = parseMarkdown(md);
-          const out = formatDText(parsed.document);
-          writeFileSync('version_changelog.dtext', out.output);
+          const { output } = convertMarkdownToDText(md);
+          writeFileSync('version_changelog.dtext', `${output}\n`);
           EOF
           node convert.mjs
 

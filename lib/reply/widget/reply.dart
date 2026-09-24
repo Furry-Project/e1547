@@ -1,14 +1,18 @@
+import 'package:e1547/client/client.dart';
 import 'package:e1547/comment/comment.dart';
 import 'package:e1547/markup/markup.dart';
 import 'package:e1547/reply/reply.dart';
 import 'package:e1547/shared/shared.dart';
+import 'package:e1547/ticket/ticket.dart';
 import 'package:e1547/user/user.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ReplyTile extends StatelessWidget {
-  const ReplyTile({super.key, required this.reply});
+  const ReplyTile({super.key, required this.reply, this.hasActions = true});
 
   final Reply reply;
+  final bool hasActions;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +46,32 @@ class ReplyTile extends StatelessWidget {
                 ],
               ),
             ),
+            flightShuttleBuilder:
+                (
+                  flightContext,
+                  animation,
+                  flightDirection,
+                  fromHeroContext,
+                  toHeroContext,
+                ) => Material(
+                  type: MaterialType.transparency,
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: switch (flightDirection) {
+                      HeroFlightDirection.push => fromHeroContext.widget,
+                      HeroFlightDirection.pop => toHeroContext.widget,
+                    },
+                  ),
+                ),
           ),
+          if (hasActions)
+            Padding(
+              padding: const EdgeInsets.only(left: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [ReplyMenu(reply: reply)],
+              ),
+            ),
           ReplyWarning(reply: reply),
           const SizedBox(height: 8),
           const Divider(),
@@ -84,8 +113,7 @@ class ReplyHeader extends StatelessWidget {
             ),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) =>
-                    UserLoadingPage(reply.creatorId.toString()),
+                builder: (context) => UserLoadingPage(reply.creatorId),
               ),
             ),
           ),
@@ -112,6 +140,68 @@ class ReplyVisibilityIndicator extends StatelessWidget {
         size: smallIconSize(context),
         color: Theme.of(context).colorScheme.error,
       ),
+    );
+  }
+}
+
+class ReplyMenu extends StatelessWidget {
+  const ReplyMenu({super.key, required this.reply});
+
+  final Reply reply;
+
+  @override
+  Widget build(BuildContext context) {
+    final client = context.watch<Client>();
+    return PopupMenuButton<VoidCallback>(
+      icon: const Dimmed(child: Icon(Icons.more_vert)),
+      onSelected: (value) => value(),
+      itemBuilder: (context) => [
+        if (client.identity.username == reply.creator)
+          PopupMenuTile(
+            title: 'Edit',
+            icon: Icons.edit,
+            value: () => guardWithLogin(
+              context: context,
+              callback: () => editReply(context: context, reply: reply),
+              error: 'You must be logged in to edit replies!',
+            ),
+          ),
+        PopupMenuTile(
+          title: 'Reply',
+          icon: Icons.reply,
+          value: () => guardWithLogin(
+            context: context,
+            callback: () => quoteReply(context: context, reply: reply),
+            error: 'You must be logged in to reply!',
+          ),
+        ),
+        PopupMenuTile(
+          title: 'Copy ID',
+          icon: Icons.tag,
+          value: () async {
+            Clipboard.setData(ClipboardData(text: reply.id.toString()));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 1),
+                content: Text('Copied reply id #${reply.id}'),
+              ),
+            );
+          },
+        ),
+        PopupMenuTile(
+          title: 'Report',
+          icon: Icons.report,
+          value: () => guardWithLogin(
+            context: context,
+            callback: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => ReplyReportScreen(reply: reply),
+              ),
+            ),
+            error: 'You must be logged in to report replies!',
+          ),
+        ),
+      ],
     );
   }
 }

@@ -23,7 +23,7 @@ export 'package:dio/dio.dart' show CancelToken;
 
 class Client with Disposable {
   Client({required this.identity, required this.traits, required this.storage})
-    : dio = createDefaultDio(identity, cache: storage.httpCache);
+    : dio = createDefaultDio(identity, queryCache: storage.queryCache);
 
   final Dio dio;
   final AppStorage storage;
@@ -40,9 +40,9 @@ class Client with Disposable {
 
   late final PostClient posts = PostClient(
     dio: dio,
-    identity: identity,
+    pools: pools,
     traits: traits,
-    poolsService: pools,
+    identity: identity,
   );
 
   late final TagClient tags = TagClient(dio: dio);
@@ -62,6 +62,7 @@ class Client with Disposable {
   late final FollowClient follows = FollowClient(
     database: storage.sqlite,
     identity: identity,
+    dio: dio,
   );
 
   late final FollowServer followServer = FollowServer(
@@ -79,7 +80,10 @@ class Client with Disposable {
     traits: traits,
   );
 
-  late final HistoryClient histories = HistoryClient(server: historyServer);
+  late final HistoryClient histories = HistoryClient(
+    server: historyServer,
+    dio: dio,
+  );
 
   @override
   void dispose() {

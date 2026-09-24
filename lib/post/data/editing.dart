@@ -26,6 +26,24 @@ abstract class PostEdit with _$PostEdit {
     tags: post.tags.values.expand((tagList) => tagList).toList(),
   );
 
+  Post applyTo(Post post) {
+    final oldTags = post.tags.values.expand((category) => category).toSet();
+    final added = tags.where((tag) => !oldTags.contains(tag));
+    final next = {
+      for (final MapEntry(:key, :value) in post.tags.entries)
+        key: value.where(tags.contains).toList(),
+    };
+    next['general'] = [...?next['general'], ...added];
+
+    return post.copyWith(
+      rating: rating,
+      description: description,
+      sources: sources,
+      tags: next,
+      relationships: post.relationships.copyWith(parentId: parentId),
+    );
+  }
+
   Map<String, String?>? toForm() {
     Map<String, String?> body = {};
 

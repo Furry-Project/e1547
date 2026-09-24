@@ -55,6 +55,7 @@ class VoteDisplay extends StatelessWidget {
     final isUpvoted = vote == 1;
     final isDownvoted = vote == -1;
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         InkResponse(
           onTap: onUpvote != null ? () {} : null,

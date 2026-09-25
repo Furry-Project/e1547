@@ -104,14 +104,14 @@ dev_dependencies:
   shelf_router: ^1.1.4
   # flutter pub run build_runner build
   # do not upgrade to 2.13. infinite loop: dart-lang/sdk#62593
-  build_runner: ^2.16.1
+  build_runner: ^2.12.2
   drift_dev: ^2.25.2
   flutter_lints: ^6.0.0
   # flutter pub run flutter_launcher_icons:main
   flutter_launcher_icons: ^0.14.3
   # flutter pub run flutter_native_splash:create
   flutter_native_splash: ^2.4.6
-  freezed: ^4.0.2
+  freezed: ^4.0.0-dev.3
   json_serializable: ^6.9.5
 
 dependency_overrides:

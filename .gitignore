@@ -138,3 +138,6 @@ app.*.symbols
 # local credentials
 .env
 .env.*
+
+# FVM Version Cache
+.fvm/
